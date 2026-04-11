@@ -15,7 +15,9 @@
     "@heroui/react": "^3.0.2",
     "@heroui/styles": "^3.0.2",
     "electron-serve": "^3.0.0",
-    "electron-store": "^11.0.2"
+    "electron-store": "^11.0.2",
+    "lucide-react": "^1.8.0",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.2",
