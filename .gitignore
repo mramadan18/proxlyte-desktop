@@ -8,3 +8,7 @@ next-env.d.ts
 # build
 /app
 /dist
+
+# editor
+/.vscode
+/.history
