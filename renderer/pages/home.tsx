@@ -1,19 +1,12 @@
-import React from 'react'
-import Head from 'next/head'
-import Link from 'next/link'
-import Image from 'next/image'
+import Head from "next/head";
+import Link from "next/link";
+import Image from "next/image";
+import { Fragment } from "react";
+import { Button } from "@heroui/react";
 
 export default function HomePage() {
-  const [message, setMessage] = React.useState('No message found')
-
-  React.useEffect(() => {
-    window.ipc.on<string>('message', (message) => {
-      setMessage(message)
-    })
-  }, [])
-
   return (
-    <React.Fragment>
+    <Fragment>
       <Head>
         <title>Home - Nextron (basic-lang-typescript)</title>
       </Head>
@@ -28,16 +21,7 @@ export default function HomePage() {
           height={256}
         />
       </div>
-      <div>
-        <button
-          onClick={() => {
-            window.ipc.send<string>('message', 'Hello')
-          }}
-        >
-          Test IPC
-        </button>
-        <p>{message}</p>
-      </div>
-    </React.Fragment>
-  )
+      <Button>My Button</Button>
+    </Fragment>
+  );
 }
