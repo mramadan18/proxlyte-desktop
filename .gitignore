@@ -12,3 +12,7 @@ next-env.d.ts
 # editor
 /.vscode
 /.history
+
+# docs
+ROADMAP_CHECKLIST.md
+ANALYSIS_ROADMAP.md

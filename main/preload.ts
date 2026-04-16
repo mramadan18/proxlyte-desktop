@@ -1,20 +1,28 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
+import { contextBridge, ipcRenderer } from "electron";
 
-const handler = {
-  send<T>(channel: string, value?: T) {
-    ipcRenderer.send(channel, value)
+const api = {
+  // Window controls
+  minimize: () => ipcRenderer.send("window-minimize"),
+  maximize: () => ipcRenderer.send("window-maximize"),
+  close: () => ipcRenderer.send("window-close"),
+  isMaximized: () => ipcRenderer.invoke("is-window-maximized"),
+
+  // Proxy controls
+  startServer: () => ipcRenderer.invoke("start-server"),
+  stopServer: () => ipcRenderer.invoke("stop-server"),
+  getServerStatus: () => ipcRenderer.invoke("get-server-status"),
+
+  // Events
+  onMaximized: (callback: () => void) => {
+    ipcRenderer.on("window-maximized", callback);
+    return () => ipcRenderer.removeListener("window-maximized", callback);
   },
-  on<T>(channel: string, callback: (...args: T[]) => void) {
-    const subscription = (_event: IpcRendererEvent, ...args: T[]) =>
-      callback(...args)
-    ipcRenderer.on(channel, subscription)
-
-    return () => {
-      ipcRenderer.removeListener(channel, subscription)
-    }
+  onUnmaximized: (callback: () => void) => {
+    ipcRenderer.on("window-unmaximized", callback);
+    return () => ipcRenderer.removeListener("window-unmaximized", callback);
   },
-}
+};
 
-contextBridge.exposeInMainWorld('ipc', handler)
+contextBridge.exposeInMainWorld("api", api);
 
-export type IpcHandler = typeof handler
+export type AppApi = typeof api;

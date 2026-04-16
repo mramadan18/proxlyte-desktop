@@ -1,9 +1,10 @@
 {
   "private": true,
-  "name": "my-nextron-app",
-  "description": "My application description",
+  "name": "proxlyte",
+  "productName": "Proxlyte",
+  "description": "Proxlyte is a free and open-source proxy server for Windows, macOS, and Linux.",
   "version": "1.0.0",
-  "author": "Yoshihide Shiono <shiono.yoshihide@gmail.com>",
+  "author": "Mohamed Ramadan <m.ramadan181199@gmail.com>",
   "type": "module",
   "main": "app/main.js",
   "scripts": {

@@ -1,6 +1,6 @@
-appId: com.example.nextron
-productName: My Nextron App
-copyright: Copyright © 2026 Yoshihide Shiono
+appId: com.nextspacey.proxlyte
+productName: Proxlyte
+copyright: Copyright © 2026 Mohamed Ramadan
 directories:
   output: dist
   buildResources: resources
