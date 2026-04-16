@@ -1,13 +1,10 @@
 import Head from "next/head";
 import { Shield } from "lucide-react";
 import { useSettingsStore, AppSettings } from "../store/settingsStore";
+import { SettingToggle } from "../components/Settings/SettingToggle";
 
 export default function SettingsPage() {
   const { settings, toggleSetting, settingItems } = useSettingsStore();
-
-  const handleToggle = (key: string) => {
-    toggleSetting(key as keyof AppSettings);
-  };
 
   return (
     <div className="flex flex-col gap-6 pb-10">
@@ -27,37 +24,17 @@ export default function SettingsPage() {
       <div className="relative group rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl transition-all duration-500">
         <div className="relative bg-white/2 backdrop-blur-xl border border-white/5 rounded-xl sm:rounded-2xl overflow-hidden px-4 sm:px-6 py-4">
           <div className="flex flex-col gap-4">
-            {settingItems.map((item, index) => {
-              const Icon = item.icon;
-              const isEnabled = settings[item.id as keyof AppSettings];
-              return (
-                <div key={item.id} className={`flex items-center justify-between py-4 ${index !== settingItems.length - 1 ? 'border-b border-white/5' : ''}`}>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500
-                      ${isEnabled ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-white/5 text-white/40 border border-white/10'}
-                    `}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <h3 className="text-sm font-bold text-white tracking-wide">{item.title}</h3>
-                      <p className="text-[11px] font-medium text-white/40">{item.description}</p>
-                    </div>
-                  </div>
-                  
-                  {/* Custom Premium Switch */}
-                  <button 
-                    onClick={() => handleToggle(item.id)}
-                    className={`relative w-11 h-6 rounded-full transition-all duration-500 outline-none p-1 shrink-0
-                      ${isEnabled ? 'bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'bg-white/10'}
-                    `}
-                  >
-                    <div className={`w-4 h-4 rounded-full bg-white transition-all duration-500 shadow-sm transform
-                      ${isEnabled ? 'translate-x-5' : 'translate-x-0'}
-                    `} />
-                  </button>
-                </div>
-              );
-            })}
+            {settingItems.map((item, index) => (
+              <SettingToggle
+                key={item.id}
+                icon={item.icon}
+                title={item.title}
+                description={item.description}
+                isEnabled={settings[item.id as keyof AppSettings] as boolean}
+                onToggle={() => toggleSetting(item.id as keyof AppSettings)}
+                isLast={index === settingItems.length - 1}
+              />
+            ))}
           </div>
         </div>
       </div>

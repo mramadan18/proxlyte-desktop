@@ -1,15 +1,20 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Settings, Terminal, Activity, Zap, Globe } from "lucide-react";
+import { Settings, Terminal, Activity, Zap, Cloud } from "lucide-react";
 import { useServerStore } from "../../store/serverStore";
+import { useTunnelStore } from "../../store/tunnelStore";
 
 export function Sidebar() {
   const { serverStatus } = useServerStore();
+  const { tunnels } = useTunnelStore();
   const router = useRouter();
+
+  const isAnyTunnelRunning = tunnels.some((t) => t.status === "running");
+  const overallStatus = isAnyTunnelRunning ? "running" : serverStatus;
 
   const tabs = [
     { id: "dashboard", label: "Overview", icon: Activity, href: "/home" },
-    { id: "network", label: "Network", icon: Globe, href: "/network" },
+    { id: "domains", label: "Domains", icon: Cloud, href: "/domains" },
     { id: "logs", label: "Console", icon: Terminal, href: "/logs" },
     { id: "settings", label: "Preferences", icon: Settings, href: "/settings" },
   ];
@@ -28,9 +33,9 @@ export function Sidebar() {
             src="/images/logo-with-bg.png"
             alt="Proxlyte Logo"
             className={`w-8 h-8 rounded-lg shadow-lg border border-white/10 transition-all duration-700
-            ${serverStatus === "running" ? "brightness-110 contrast-110" : "grayscale opacity-50"}`}
+            ${overallStatus === "running" ? "brightness-110 contrast-110" : "grayscale opacity-50"}`}
           />
-          {serverStatus === "running" && (
+          {overallStatus === "running" && (
             <div className="absolute inset-0 rounded-lg bg-(--accent-secondary)/20 blur-md -z-10 animate-pulse"></div>
           )}
         </div>
@@ -40,10 +45,10 @@ export function Sidebar() {
           </h1>
           <div className="flex items-center gap-1 mt-0.5">
             <span
-              className={`w-1 h-1 rounded-full ${serverStatus === "running" ? "bg-success shadow-[0_0_8px_var(--color-success)]" : "bg-danger"}`}
+              className={`w-1 h-1 rounded-full ${overallStatus === "running" ? "bg-success shadow-[0_0_8px_var(--color-success)]" : "bg-danger"}`}
             ></span>
             <span className="text-[9px] font-semibold uppercase tracking-wider text-(--text-dim)">
-              {serverStatus === "running" ? "Active" : "Offline"}
+              {overallStatus === "running" ? "Active" : "Offline"}
             </span>
           </div>
         </div>

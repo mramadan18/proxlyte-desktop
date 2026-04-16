@@ -7,11 +7,13 @@ export interface AppSettings {
   autoReconnect: boolean;
   notifications: boolean;
   darkMode: boolean;
+  customDomains: string[];
 }
 
 interface SettingsState {
   settings: AppSettings;
   toggleSetting: (key: keyof AppSettings) => void;
+  updateSetting: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
   settingItems: any[];
 }
 
@@ -23,10 +25,19 @@ export const useSettingsStore = create<SettingsState>()(
         autoReconnect: true,
         notifications: true,
         darkMode: true,
+        customDomains: [],
       },
       toggleSetting: (key) =>
+        set((state) => {
+          const val = state.settings[key];
+          if (typeof val === "boolean") {
+             return { settings: { ...state.settings, [key]: !val } };
+          }
+          return state;
+        }),
+      updateSetting: (key, value) => 
         set((state) => ({
-          settings: { ...state.settings, [key]: !state.settings[key] },
+          settings: { ...state.settings, [key]: value },
         })),
       settingItems: [
         {
