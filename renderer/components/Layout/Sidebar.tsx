@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Settings, Terminal, Activity, Zap, Cloud } from "lucide-react";
+import { Settings, Terminal, Activity, Cloud } from "lucide-react";
 import { useServerStore } from "../../store/serverStore";
 import { useTunnelStore } from "../../store/tunnelStore";
 
@@ -14,7 +14,7 @@ export function Sidebar() {
 
   const tabs = [
     { id: "dashboard", label: "Overview", icon: Activity, href: "/home" },
-    { id: "domains", label: "Domains", icon: Cloud, href: "/domains" },
+    { id: "domains", label: "Domain s", icon: Cloud, href: "/domains" },
     { id: "logs", label: "Console", icon: Terminal, href: "/logs" },
     { id: "settings", label: "Preferences", icon: Settings, href: "/settings" },
   ];
@@ -76,27 +76,13 @@ export function Sidebar() {
               <Icon
                 className={`relative z-10 w-3.5 h-3.5 mr-2.5 transition-colors duration-300 ${isActive ? "text-(--accent-indigo)" : "group-hover:text-(--text-main)/80"}`}
               />
-              <span className="relative z-10 text-[11px] font-semibold tracking-wide">
+              <span className="relative z-10 text-xs font-semibold tracking-wide">
                 {tab.label}
               </span>
             </Link>
           );
         })}
       </nav>
-
-      <div className="p-3 mt-auto">
-        <div className="p-4 rounded-xl bg-black/20 border border-(--glass-highlight) flex items-center gap-3 backdrop-blur-md">
-          <Zap className="w-4 h-4 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" />
-          <div>
-            <p className="text-[9px] font-bold text-(--text-muted)/80 uppercase tracking-widest">
-              Plan
-            </p>
-            <p className="text-[11px] font-semibold text-(--text-main)">
-              Pro Edition
-            </p>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }
