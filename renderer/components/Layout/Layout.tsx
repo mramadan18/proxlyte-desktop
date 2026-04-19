@@ -18,7 +18,7 @@ export function Layout({ children }: LayoutProps) {
         {/* Main Content Area */}
         <main className="flex-1 bg-white/1 backdrop-blur-3xl border border-white/5 rounded-xl sm:rounded-2xl flex flex-col overflow-hidden shadow-2xl relative transition-all duration-500">
           <div className="flex-1 p-4 sm:p-6 overflow-y-auto custom-scrollbar">
-            <div className="container mx-auto animate-in fade-in zoom-in-95 duration-500 pb-12">
+            <div className="container mx-auto h-full pb-12">
               {children}
             </div>
           </div>

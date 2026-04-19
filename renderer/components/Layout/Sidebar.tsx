@@ -1,20 +1,18 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Settings, Terminal, Activity, Cloud } from "lucide-react";
-import { useServerStore } from "../../store/serverStore";
 import { useTunnelStore } from "../../store/tunnelStore";
 
 export function Sidebar() {
-  const { serverStatus } = useServerStore();
   const { tunnels } = useTunnelStore();
   const router = useRouter();
 
   const isAnyTunnelRunning = tunnels.some((t) => t.status === "running");
-  const overallStatus = isAnyTunnelRunning ? "running" : serverStatus;
+  const overallStatus = isAnyTunnelRunning ? "running" : "stopped";
 
   const tabs = [
     { id: "dashboard", label: "Overview", icon: Activity, href: "/home" },
-    { id: "domains", label: "Domain s", icon: Cloud, href: "/domains" },
+    { id: "domains", label: "Domains", icon: Cloud, href: "/domains" },
     { id: "logs", label: "Console", icon: Terminal, href: "/logs" },
     { id: "settings", label: "Preferences", icon: Settings, href: "/settings" },
   ];

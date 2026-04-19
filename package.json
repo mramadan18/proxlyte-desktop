@@ -17,7 +17,9 @@
     "@heroui/styles": "^3.0.2",
     "electron-serve": "^3.0.0",
     "electron-store": "^11.0.2",
+    "framer-motion": "^12.38.0",
     "lucide-react": "^1.8.0",
+    "recharts": "^3.8.1",
     "zustand": "^5.0.12"
   },
   "devDependencies": {

@@ -1,10 +1,8 @@
 import Head from "next/head";
 import { useTunnelStore } from "../store/tunnelStore";
 import { TunnelItem } from "../components/Tunnels/TunnelItem";
-import {
-  Plus,
-  Link as LinkIcon,
-} from "lucide-react";
+import { TrafficChart } from "../components/Dashboard/TrafficChart";
+import { Plus, Link as LinkIcon } from "lucide-react";
 
 export default function HomePage() {
   const { tunnels, addTunnel } = useTunnelStore();
@@ -24,6 +22,8 @@ export default function HomePage() {
           tunnels to manage all your active connections from one place.
         </p>
       </div>
+
+      <TrafficChart />
 
       <div className="flex flex-col gap-4">
         {tunnels.map((tunnel) => (
