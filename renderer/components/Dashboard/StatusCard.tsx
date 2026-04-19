@@ -1,13 +1,6 @@
-import { Button } from "@heroui/react";
-import {
-  Play,
-  Square,
-  Network,
-  Clock,
-  Activity,
-  ArrowRightLeft,
-  Hash,
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import { Button, Select, ListBox, Input } from "@heroui/react";
+import { Play, Square, Network, Clock, Activity, Hash } from "lucide-react";
 import { useTunnelStore } from "../../store/tunnelStore";
 
 export const StatusCard = () => {
@@ -20,6 +13,17 @@ export const StatusCard = () => {
       toggleTunnelStatus(defaultTunnel.id);
     }
   };
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="h-[280px] sm:h-[320px] rounded-2xl sm:rounded-3xl bg-(--glass-bg) border border-(--glass-highlight) animate-pulse" />
+    );
+  }
   return (
     <div className="relative group rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all duration-500">
       {/* Animated background glow when running */}
@@ -66,39 +70,61 @@ export const StatusCard = () => {
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30">
               <Hash className="w-4 h-4" />
             </div>
-            <input
+            <Input
               type="number"
               placeholder="3000"
               value={defaultTunnel?.port || "3000"}
-              onChange={(e) =>
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 updateTunnel(defaultTunnel.id, { port: e.target.value })
               }
               disabled={isRunning}
-              className="w-full bg-transparent border-none text-white text-sm py-3 pl-10 pr-4 outline-none font-mono placeholder:text-white/20"
+              className="w-full bg-transparent border-none text-white text-sm py-3 ps-10 pe-4 outline-none font-mono placeholder:text-white/20"
             />
           </div>
           <div
             className={`shrink-0 min-w-25 rounded-xl bg-black/20 border transition-all duration-300 flex items-center p-1 ${isRunning ? "opacity-50 pointer-events-none border-white/3" : "border-white/10"}`}
           >
-            <select
-              value={defaultTunnel?.protocol || "http"}
-              onChange={(e) =>
-                updateTunnel(defaultTunnel.id, { protocol: e.target.value })
-              }
-              disabled={isRunning}
-              className="w-full bg-transparent text-white text-xs font-bold uppercase tracking-wider px-3 py-2 outline-none appearance-none cursor-pointer"
+            <Select
+              aria-label="Protocol"
+              selectedKey={defaultTunnel?.protocol || "http"}
+              isDisabled={isRunning}
+              onSelectionChange={(key) => {
+                const val = key as string;
+                if (val && defaultTunnel) {
+                  updateTunnel(defaultTunnel.id, { protocol: val });
+                }
+              }}
+              className="w-full"
             >
-              <option value="http" className="bg-[#111]">
-                HTTP(S)
-              </option>
-              <option value="tcp" className="bg-[#111]">
-                TCP
-              </option>
-              <option value="udp" className="bg-[#111]">
-                UDP
-              </option>
-            </select>
-            <ArrowRightLeft className="w-3.5 h-3.5 text-white/40 mr-3 pointer-events-none" />
+              <Select.Trigger className="bg-transparent hover:bg-white/5 data-[hovered=true]:bg-white/5 h-8 min-h-8 shadow-none transition-all flex items-center justify-center gap-2 outline-none border-none">
+                <Select.Value className="text-white text-[10px] font-black uppercase tracking-widest text-center" />
+              </Select.Trigger>
+              <Select.Popover className="bg-neutral-900 border border-white/10 rounded-xl p-1 min-w-[120px]">
+                <ListBox className="p-0">
+                  <ListBox.Item
+                    id="http"
+                    textValue="HTTP(S)"
+                    className="text-white text-[10px] font-bold uppercase data-[hovered=true]:bg-white/5 p-2 rounded-lg cursor-pointer transition-colors"
+                  >
+                    HTTP(S)
+                  </ListBox.Item>
+                  <ListBox.Item
+                    id="tcp"
+                    textValue="TCP"
+                    className="text-white text-[10px] font-bold uppercase data-[hovered=true]:bg-white/5 p-2 rounded-lg cursor-pointer transition-colors"
+                  >
+                    TCP
+                  </ListBox.Item>
+                  <ListBox.Item
+                    id="udp"
+                    textValue="UDP"
+                    className="text-white text-[10px] font-bold uppercase data-[hovered=true]:bg-white/5 p-2 rounded-lg cursor-pointer transition-colors"
+                  >
+                    UDP
+                  </ListBox.Item>
+                </ListBox>
+              </Select.Popover>
+            </Select>
           </div>
         </div>
 
@@ -134,7 +160,7 @@ export const StatusCard = () => {
         <Button
           size="md"
           onPress={handleToggle}
-          className={`mt-2 h-10 sm:h-11 w-full rounded-lg sm:rounded-xl font-bold text-[12px] sm:text-[13px] transition-all duration-500 border-none relative overflow-hidden group
+          className={`mt-2 h-10 sm:h-11 w-full rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all duration-500 border-none relative overflow-hidden group
           ${
             isRunning
               ? "bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/30"

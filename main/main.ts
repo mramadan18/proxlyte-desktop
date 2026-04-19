@@ -7,6 +7,7 @@ import { TunnelManager } from "./services/TunnelManager";
 import { TrayManager } from "./services/TrayManager";
 import Store from "electron-store";
 import { ipcMain } from "electron";
+import { UpdateManager } from "./services/UpdateManager";
 
 const store = new Store();
 
@@ -16,8 +17,13 @@ class ProxlyteApp {
   private mainWindow: BrowserWindow | null = null;
   private tunnelManager: TunnelManager | null = null;
   private trayManager: TrayManager | null = null;
+  private updateManager: UpdateManager | null = null;
 
   constructor() {
+    app.name = "Proxlyte";
+    if (process.platform === "win32") {
+      app.setAppUserModelId("com.nextspacey.proxlyte");
+    }
     this.setupEnvironment();
     this.setupLock();
   }
@@ -47,8 +53,11 @@ class ProxlyteApp {
 
   private async createMainWindow() {
     this.mainWindow = createWindow("main", {
-      width: 1000,
-      height: 600,
+      width: 1100,
+      height: 700,
+      minWidth: 800,
+      minHeight: 600,
+      center: true,
       frame: false,
       show: false,
       transparent: true,
@@ -57,15 +66,18 @@ class ProxlyteApp {
       },
     });
 
+    this.mainWindow.center();
+
     // Sub-systems
     this.tunnelManager = new TunnelManager();
     this.tunnelManager.registerIpcHandlers();
     WindowManager.bindWindowEvents(this.mainWindow);
     this.trayManager = new TrayManager(this.mainWindow);
+    this.updateManager = new UpdateManager(this.mainWindow);
 
     // Load Content
     const shouldShow = !process.argv.includes("--hidden");
-    
+
     if (isProd) {
       await this.mainWindow.loadURL("app://./home");
     } else {
@@ -79,6 +91,9 @@ class ProxlyteApp {
     } else {
       this.mainWindow.hide();
     }
+
+    // Check for updates
+    this.updateManager.check();
   }
 
   private setupGlobalHandlers() {

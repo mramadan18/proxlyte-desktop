@@ -3,6 +3,7 @@ import { Shield, Cloud } from "lucide-react";
 import { useSettingsStore, AppSettings } from "../store/settingsStore";
 import { useTunnelStore } from "../store/tunnelStore";
 import { SettingToggle } from "../components/Settings/SettingToggle";
+import { UpdateSection } from "../components/Settings/UpdateSection";
 import { useEffect } from "react";
 
 export default function SettingsPage() {
@@ -54,6 +55,8 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      <UpdateSection />
 
       <div className="relative group rounded-xl overflow-hidden shadow-2xl mt-4">
         <div className="bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/10 hover:border-blue-500/20 transition-all rounded-xl p-5 flex items-center justify-between">

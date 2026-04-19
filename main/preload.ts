@@ -47,6 +47,38 @@ const api = {
   storeSet: (key: string, val: any) => ipcRenderer.invoke("store-set", key, val),
   storeDelete: (key: string) => ipcRenderer.invoke("store-delete", key),
   setLoginItem: (openAtLogin: boolean) => ipcRenderer.invoke("set-login-item", openAtLogin),
+  
+  // Updates
+  checkForUpdates: () => ipcRenderer.send("check-for-updates"),
+  installUpdate: () => ipcRenderer.send("install-update"),
+  onUpdateMessage: (callback: (message: string) => void) => {
+    const handler = (_event: any, message: string) => callback(message);
+    ipcRenderer.on("update-message", handler);
+    return () => ipcRenderer.removeListener("update-message", handler);
+  },
+  onUpdateAvailable: (callback: (info: any) => void) => {
+    const handler = (_event: any, info: any) => callback(info);
+    ipcRenderer.on("update-available", handler);
+    return () => ipcRenderer.removeListener("update-available", handler);
+  },
+  onUpdateNotAvailable: (callback: () => void) => {
+    ipcRenderer.on("update-not-available", callback);
+    return () => ipcRenderer.removeListener("update-not-available", callback);
+  },
+  onUpdateDownloadProgress: (callback: (progress: any) => void) => {
+    const handler = (_event: any, progress: any) => callback(progress);
+    ipcRenderer.on("update-download-progress", handler);
+    return () => ipcRenderer.removeListener("update-download-progress", handler);
+  },
+  onUpdateDownloaded: (callback: () => void) => {
+    ipcRenderer.on("update-downloaded", callback);
+    return () => ipcRenderer.removeListener("update-downloaded", callback);
+  },
+  onUpdateError: (callback: (err: string) => void) => {
+    const handler = (_event: any, err: string) => callback(err);
+    ipcRenderer.on("update-error", handler);
+    return () => ipcRenderer.removeListener("update-error", handler);
+  },
 };
 
 contextBridge.exposeInMainWorld("api", api);

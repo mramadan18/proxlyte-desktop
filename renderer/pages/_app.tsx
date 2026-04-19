@@ -5,10 +5,14 @@ import { useTunnelStore } from "../store/tunnelStore";
 import { useLogsStore } from "../store/logsStore";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/router";
+import { UpdateNotification } from "../components/Updates/UpdateNotification";
 import "../styles/global.css";
+
+import { useUpdateHandlers } from "../hooks/useUpdateHandlers";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
+  useUpdateHandlers();
 
   useEffect(() => {
     useTunnelStore.getState().setupListeners();
@@ -17,6 +21,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <Layout>
+      <UpdateNotification />
       <AnimatePresence mode="wait">
         <motion.div
           key={router.pathname}
