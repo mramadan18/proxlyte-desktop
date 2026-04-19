@@ -10,4 +10,19 @@ files:
       - package.json
       - app
       - resources
-publish: null
+publish:
+  provider: github
+  owner: mramadan18
+  repo: proxlyte-desktop
+win:
+  target: nsis
+  icon: resources/icon.ico
+nsis:
+  oneClick: false
+  perMachine: true
+  allowToChangeInstallationDirectory: true
+  runAfterFinish: true
+  installerIcon: "resources/icon.ico"
+  uninstallerIcon: "resources/icon.ico"
+  license: resources/license.txt
+  include: resources/installer.nsh

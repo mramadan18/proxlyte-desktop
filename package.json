@@ -10,7 +10,11 @@
   "scripts": {
     "dev": "nextron --renderer-port 1000",
     "build": "nextron build",
-    "postinstall": "patch-package && electron-builder install-app-deps"
+    "postinstall": "patch-package && electron-builder install-app-deps",
+    "release:beta": "npm version prerelease --preid=beta -m \"chore(release): %s\" && git push origin main --tags",
+    "release:patch": "npm version patch -m \"chore(release): %s\" && git push origin main --tags",
+    "release:minor": "npm version minor -m \"chore(release): %s\" && git push origin main --tags",
+    "release:major": "npm version major -m \"chore(release): %s\" && git push origin main --tags"
   },
   "dependencies": {
     "@heroui/react": "^3.0.2",

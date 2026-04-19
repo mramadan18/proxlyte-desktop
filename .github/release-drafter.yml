@@ -1,0 +1,54 @@
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+categories:
+  - title: "🚀 Features"
+    labels:
+      - "feature"
+      - "feat"
+  - title: "🐛 Bug Fixes"
+    labels:
+      - "fix"
+      - "bug"
+  - title: "🧰 Maintenance"
+    labels:
+      - "chore"
+      - "refactor"
+      - "docs"
+change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
+version-resolver:
+  major:
+    labels:
+      - "major"
+  minor:
+    labels:
+      - "minor"
+  default: patch
+template: |
+  # 🌐 Proxlyte - $RESOLVED_VERSION
+
+  We are pleased to announce the release of **Proxlyte** $RESOLVED_VERSION, a powerful and open-source proxy tool. This update focuses on stability, build automation, and cross-platform support.
+
+  ## 🚀 Direct Download Links
+
+  | Operating System | File Type | Download Link |
+  | :--- | :--- | :--- |
+  | **Windows** | 🪟 Setup (.exe) | [Download for Windows](https://github.com/mramadan18/proxlyte-desktop/releases/download/v$RESOLVED_VERSION/Proxlyte-Setup-$RESOLVED_VERSION.exe) |
+  | **macOS** | 🍎 Apple Silicon (.dmg) | [Download for macOS](https://github.com/mramadan18/proxlyte-desktop/releases/download/v$RESOLVED_VERSION/Proxlyte-$RESOLVED_VERSION-arm64.dmg) |
+  | **Linux** | 🐧 AppImage | [Download for Linux (AppImage)](https://github.com/mramadan18/proxlyte-desktop/releases/download/v$RESOLVED_VERSION/Proxlyte-$RESOLVED_VERSION.AppImage) |
+  | **Linux** | 📦 Debian (.deb) | [Download for Linux (Debian)](https://github.com/mramadan18/proxlyte-desktop/releases/download/v$RESOLVED_VERSION/proxlyte_$RESOLVED_VERSION_amd64.deb) |
+
+  ---
+
+  ## 🛠️ What's Changed
+  $CHANGES
+
+  ---
+
+  ## ⚠️ Technical Information
+  > [!TIP]
+  > **Automatic Updates:** If you already have the application installed, it will automatically update in the background.
+  > 
+  > **Note on Assets:** The `.blockmap` and `.yml` files listed below are used by the application for differential updates. You do not need to download these files manually.
+
+  ---
+  **Full Changelog:** [View Compare](${{ github.event.compare }})
