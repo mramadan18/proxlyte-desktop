@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Play, ChevronDown, ChevronRight } from "lucide-react";
 
+import { useTunnelStore } from "../../store/tunnelStore";
+
 interface LogLineProps {
   log: {
     time: string;
@@ -17,7 +19,28 @@ interface LogLineProps {
 
 export const LogLine = ({ log }: LogLineProps) => {
   const [expanded, setExpanded] = useState(false);
+  const { tunnels } = useTunnelStore();
   const hasDetails = !!log.details;
+
+  const handleReplay = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!log.details) return;
+
+    const runningTunnel = tunnels.find((t) => t.status === "running") || tunnels[0];
+    const port = runningTunnel?.port || "3000";
+    const url = `http://localhost:${port}${log.details.path}`;
+
+    try {
+      await fetch(url, {
+        method: log.details.method,
+        headers: log.details.headers as Record<string, string>,
+        body: log.details.method !== "GET" && log.details.method !== "HEAD" ? log.details.body : undefined,
+      });
+      // We don't necessarily need to show the result here, as it will trigger a new log line if successful
+    } catch (err) {
+      console.error("Replay failed:", err);
+    }
+  };
 
   return (
     <div className={`flex flex-col rounded-lg transition-all duration-300 ${hasDetails ? 'cursor-pointer hover:bg-white/5' : 'hover:bg-white/3'}`}>
@@ -58,7 +81,10 @@ export const LogLine = ({ log }: LogLineProps) => {
                 {log.details.method} {log.details.path}
               </span>
             </div>
-            <button className="flex items-center gap-1.5 px-3 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 rounded-md transition-colors text-[10px] font-bold uppercase tracking-wider border border-indigo-500/30">
+            <button 
+              onClick={handleReplay}
+              className="flex items-center gap-1.5 px-3 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 rounded-md transition-colors text-[10px] font-bold uppercase tracking-wider border border-indigo-500/30"
+            >
               <Play className="w-3 h-3" /> Replay
             </button>
           </div>
