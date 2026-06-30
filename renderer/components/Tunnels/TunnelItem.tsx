@@ -2,18 +2,22 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { useTunnelStore, Tunnel } from "../../store/tunnelStore";
 import { useSettingsStore } from "../../store/settingsStore";
-import { Play, Square, Trash2, Link as LinkIcon, Copy } from "lucide-react";
+import { Play, Square, Trash2, Link as LinkIcon, Copy, Check } from "lucide-react";
 import { Select, ListBox, Input } from "@heroui/react";
 
 export function TunnelItem({ tunnel }: { tunnel: Tunnel }) {
   const { updateTunnel, removeTunnel, toggleTunnelStatus, isAuthenticated } =
     useTunnelStore();
 
+  const [copied, setCopied] = useState(false);
+
   const isRunning = tunnel.status === "running" || tunnel.status === "starting";
 
   const handleCopyLink = () => {
     if (tunnel.publicUrl) {
       navigator.clipboard.writeText(tunnel.publicUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -81,15 +85,29 @@ export function TunnelItem({ tunnel }: { tunnel: Tunnel }) {
             {tunnel.publicUrl && (
               <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium flex-1 min-w-0 transition-colors">
                 <LinkIcon size={14} className="shrink-0" />
-                <span className="truncate select-all" title={tunnel.publicUrl}>
+                <a
+                  href={tunnel.publicUrl}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (typeof window !== "undefined" && window.api && window.api.openExternal) {
+                      window.api.openExternal(tunnel.publicUrl!);
+                    }
+                  }}
+                  className="truncate hover:underline cursor-pointer flex-1 min-w-0 text-emerald-400"
+                  title="Open in default browser"
+                >
                   {tunnel.publicUrl?.replace("https://", "")}
-                </span>
+                </a>
                 <button
                   onClick={handleCopyLink}
-                  className="p-1.5 hover:bg-emerald-400/20 rounded-md transition-colors shrink-0"
+                  className="p-1.5 hover:bg-emerald-400/20 active:scale-95 rounded-md transition-all shrink-0"
                   title="Copy link"
                 >
-                  <Copy size={14} />
+                  {copied ? (
+                    <Check size={14} className="text-emerald-400 animate-in zoom-in duration-200" />
+                  ) : (
+                    <Copy size={14} />
+                  )}
                 </button>
               </div>
             )}

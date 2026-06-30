@@ -1,5 +1,5 @@
 import path from "path";
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, shell } from "electron";
 import serve from "electron-serve";
 import { createWindow } from "./helpers/create-window";
 import { WindowManager } from "./services/WindowManager";
@@ -104,6 +104,11 @@ class ProxlyteApp {
     ipcMain.handle("store-delete", (event, key) => store.delete(key));
     ipcMain.handle("set-login-item", (event, openAtLogin) => {
       app.setLoginItemSettings({ openAtLogin });
+    });
+    ipcMain.handle("open-external", async (event, url) => {
+      if (url.startsWith("http://") || url.startsWith("https://")) {
+        await shell.openExternal(url);
+      }
     });
 
     app.on("before-quit", () => {

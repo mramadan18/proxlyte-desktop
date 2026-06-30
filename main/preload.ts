@@ -54,6 +54,7 @@ const api = {
   },
 
   // Storage & System
+  openExternal: (url: string) => ipcRenderer.invoke("open-external", url),
   storeGet: (key: string) => ipcRenderer.invoke("store-get", key),
   storeSet: (key: string, val: any) =>
     ipcRenderer.invoke("store-set", key, val),
