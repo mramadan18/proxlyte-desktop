@@ -94,7 +94,7 @@ export const useTunnelStore = create<TunnelState>()(
         }));
       },
 
-      setupListeners: () => {
+      setupListeners: async () => {
         if (typeof window !== "undefined" && window.api) {
           window.api.onTunnelUrl((tunnelId: string, url: string) => {
             get().updateTunnel(tunnelId, {
@@ -105,8 +105,31 @@ export const useTunnelStore = create<TunnelState>()(
           window.api.onTunnelError((tunnelId: string, error: string) => {
             get().updateTunnel(tunnelId, { status: "error" });
           });
+          
           get().checkCloudflared();
           get().checkAuth();
+
+          // Sync running status with backend
+          try {
+            if (window.api.getActiveTunnels) {
+              const activeIds: string[] = await window.api.getActiveTunnels();
+              const { tunnels, updateTunnel } = get();
+              tunnels.forEach((t) => {
+                const isActive = activeIds.includes(t.id);
+                if (isActive) {
+                  if (t.status === "stopped" || t.status === "error") {
+                    updateTunnel(t.id, { status: "starting" });
+                  }
+                } else {
+                  if (t.status === "running" || t.status === "starting") {
+                    updateTunnel(t.id, { status: "stopped", publicUrl: undefined });
+                  }
+                }
+              });
+            }
+          } catch (e) {
+            console.error("Failed to sync active tunnels:", e);
+          }
         }
       },
 

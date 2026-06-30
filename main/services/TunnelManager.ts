@@ -206,6 +206,10 @@ export class TunnelManager {
       }
       return true;
     });
+
+    ipcMain.handle("get-active-tunnels", () => {
+      return Array.from(this.services.keys());
+    });
   }
 
   public cleanup() {

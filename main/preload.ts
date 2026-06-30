@@ -18,6 +18,7 @@ const api = {
     params: { domain: string; port: number },
   ) => ipcRenderer.invoke("start-custom-tunnel", tunnelId, params),
   stopTunnel: (tunnelId: string) => ipcRenderer.invoke("stop-tunnel", tunnelId),
+  getActiveTunnels: () => ipcRenderer.invoke("get-active-tunnels"),
 
   // Events
   onMaximized: (callback: () => void) => {
