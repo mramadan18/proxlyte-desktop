@@ -11,6 +11,7 @@ export interface TunnelLog {
   time: string;
   type: string;
   message: string;
+  tunnelId?: string;
   details?: LogDetail;
 }
 
@@ -36,7 +37,7 @@ export const useLogsStore = create<LogsState>((set) => ({
   },
   setupListeners: () => {
     if (typeof window !== "undefined" && window.api) {
-      window.api.onTunnelLog((log: string) => {
+      window.api.onTunnelLog((tunnelId: string, log: string) => {
         set((state) => ({
           logs: [
             ...state.logs,
@@ -44,6 +45,7 @@ export const useLogsStore = create<LogsState>((set) => ({
               time: state.getCurrentTimestamp(),
               type: "INFO",
               message: log,
+              tunnelId,
             },
           ],
         }));

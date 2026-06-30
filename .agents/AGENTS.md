@@ -16,6 +16,9 @@ This file defines project-specific constraints, architectural patterns, and guid
 * To persist state, use Zustand's `persist` middleware with the custom `electronStorage` engine configured to use `window.api.storeGet`, `window.api.storeSet`, and `window.api.storeDelete`.
 * Avoid standard `localStorage` or `sessionStorage` in renderer to keep settings synced with Electron's backend configuration.
 
+### 3. Multiple Tunnels Support
+* The backend allows running multiple tunnels simultaneously. All IPC calls related to starting, stopping, and logging tunnels (`start-quick-tunnel`, `start-custom-tunnel`, `stop-tunnel`, `tunnel-url`, `tunnel-log`, `tunnel-error`) require passing the `tunnelId` parameter to ensure events and processes are isolated and directed to the correct tunnel instance.
+
 ---
 
 ## ⚙️ Development Environment & Custom Patches

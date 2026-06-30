@@ -11,11 +11,13 @@ const api = {
   checkAuth: () => ipcRenderer.invoke("check-auth"),
   checkInstallation: () => ipcRenderer.invoke("check-installation"),
   login: () => ipcRenderer.invoke("cloudflared-login"),
-  startQuickTunnel: (port: number) =>
-    ipcRenderer.invoke("start-quick-tunnel", port),
-  startCustomTunnel: (params: { domain: string; port: number }) =>
-    ipcRenderer.invoke("start-custom-tunnel", params),
-  stopTunnel: () => ipcRenderer.invoke("stop-tunnel"),
+  startQuickTunnel: (tunnelId: string, port: number) =>
+    ipcRenderer.invoke("start-quick-tunnel", tunnelId, port),
+  startCustomTunnel: (
+    tunnelId: string,
+    params: { domain: string; port: number },
+  ) => ipcRenderer.invoke("start-custom-tunnel", tunnelId, params),
+  stopTunnel: (tunnelId: string) => ipcRenderer.invoke("stop-tunnel", tunnelId),
 
   // Events
   onMaximized: (callback: () => void) => {
@@ -26,28 +28,33 @@ const api = {
     ipcRenderer.on("window-unmaximized", callback);
     return () => ipcRenderer.removeListener("window-unmaximized", callback);
   },
-  onTunnelUrl: (callback: (url: string) => void) => {
-    const handler = (_event: any, url: string) => callback(url);
+  onTunnelUrl: (callback: (tunnelId: string, url: string) => void) => {
+    const handler = (_event: any, tunnelId: string, url: string) =>
+      callback(tunnelId, url);
     ipcRenderer.on("tunnel-url", handler);
     return () => ipcRenderer.removeListener("tunnel-url", handler);
   },
-  onTunnelLog: (callback: (log: string) => void) => {
-    const handler = (_event: any, log: string) => callback(log);
+  onTunnelLog: (callback: (tunnelId: string, log: string) => void) => {
+    const handler = (_event: any, tunnelId: string, log: string) =>
+      callback(tunnelId, log);
     ipcRenderer.on("tunnel-log", handler);
     return () => ipcRenderer.removeListener("tunnel-log", handler);
   },
-  onTunnelError: (callback: (error: string) => void) => {
-    const handler = (_event: any, error: string) => callback(error);
+  onTunnelError: (callback: (tunnelId: string, error: string) => void) => {
+    const handler = (_event: any, tunnelId: string, error: string) =>
+      callback(tunnelId, error);
     ipcRenderer.on("tunnel-error", handler);
     return () => ipcRenderer.removeListener("tunnel-error", handler);
   },
 
   // Storage & System
   storeGet: (key: string) => ipcRenderer.invoke("store-get", key),
-  storeSet: (key: string, val: any) => ipcRenderer.invoke("store-set", key, val),
+  storeSet: (key: string, val: any) =>
+    ipcRenderer.invoke("store-set", key, val),
   storeDelete: (key: string) => ipcRenderer.invoke("store-delete", key),
-  setLoginItem: (openAtLogin: boolean) => ipcRenderer.invoke("set-login-item", openAtLogin),
-  
+  setLoginItem: (openAtLogin: boolean) =>
+    ipcRenderer.invoke("set-login-item", openAtLogin),
+
   // Updates
   checkForUpdates: () => ipcRenderer.send("check-for-updates"),
   installUpdate: () => ipcRenderer.send("install-update"),
@@ -68,7 +75,8 @@ const api = {
   onUpdateDownloadProgress: (callback: (progress: any) => void) => {
     const handler = (_event: any, progress: any) => callback(progress);
     ipcRenderer.on("update-download-progress", handler);
-    return () => ipcRenderer.removeListener("update-download-progress", handler);
+    return () =>
+      ipcRenderer.removeListener("update-download-progress", handler);
   },
   onUpdateDownloaded: (callback: () => void) => {
     ipcRenderer.on("update-downloaded", callback);

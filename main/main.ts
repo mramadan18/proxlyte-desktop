@@ -47,8 +47,8 @@ class ProxlyteApp {
 
   public async init() {
     await app.whenReady();
-    await this.createMainWindow();
     this.setupGlobalHandlers();
+    await this.createMainWindow();
   }
 
   private async createMainWindow() {

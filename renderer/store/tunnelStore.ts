@@ -96,24 +96,14 @@ export const useTunnelStore = create<TunnelState>()(
 
       setupListeners: () => {
         if (typeof window !== "undefined" && window.api) {
-          window.api.onTunnelUrl((url: string) => {
-            const runningTunnel = get().tunnels.find(
-              (t) => t.status === "starting" || t.status === "running",
-            );
-            if (runningTunnel) {
-              get().updateTunnel(runningTunnel.id, {
-                status: "running",
-                publicUrl: url,
-              });
-            }
+          window.api.onTunnelUrl((tunnelId: string, url: string) => {
+            get().updateTunnel(tunnelId, {
+              status: "running",
+              publicUrl: url,
+            });
           });
-          window.api.onTunnelError((error: string) => {
-            const runningTunnel = get().tunnels.find(
-              (t) => t.status === "starting" || t.status === "running",
-            );
-            if (runningTunnel) {
-              get().updateTunnel(runningTunnel.id, { status: "error" });
-            }
+          window.api.onTunnelError((tunnelId: string, error: string) => {
+            get().updateTunnel(tunnelId, { status: "error" });
           });
           get().checkCloudflared();
           get().checkAuth();
@@ -162,23 +152,6 @@ export const useTunnelStore = create<TunnelState>()(
 
         if (typeof window !== "undefined" && window.api) {
           if (nextStatus === "starting") {
-            // Stop any other currently running tunnels first
-            const runningTunnels = tunnels.filter(
-              (t) =>
-                (t.status === "running" || t.status === "starting") &&
-                t.id !== id,
-            );
-            for (const runningTunnel of runningTunnels) {
-              updateTunnel(runningTunnel.id, {
-                status: "stopped",
-                publicUrl: undefined,
-              });
-            }
-            // Ask backend to stop existing first to be safe
-            if (runningTunnels.length > 0) {
-              await window.api.stopTunnel();
-            }
-
             updateTunnel(id, { status: "starting", publicUrl: undefined }); // Optimistic UI update
 
             try {
@@ -187,18 +160,18 @@ export const useTunnelStore = create<TunnelState>()(
                 const fullDomain = tunnel.subdomain
                   ? `${tunnel.subdomain}.${tunnel.baseDomain}`
                   : tunnel.baseDomain;
-                await window.api.startCustomTunnel({
+                await window.api.startCustomTunnel(id, {
                   domain: fullDomain,
                   port: portNum,
                 });
               } else {
-                await window.api.startQuickTunnel(portNum);
+                await window.api.startQuickTunnel(id, portNum);
               }
             } catch (error) {
               updateTunnel(id, { status: "error", publicUrl: undefined });
             }
           } else {
-            await window.api.stopTunnel();
+            await window.api.stopTunnel(id);
             updateTunnel(id, { status: "stopped", publicUrl: undefined });
           }
         } else {

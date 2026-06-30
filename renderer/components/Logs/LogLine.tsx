@@ -8,6 +8,7 @@ interface LogLineProps {
     time: string;
     type: string;
     message: string;
+    tunnelId?: string;
     details?: {
       method: string;
       path: string;
@@ -21,14 +22,14 @@ export const LogLine = ({ log }: LogLineProps) => {
   const [expanded, setExpanded] = useState(false);
   const { tunnels } = useTunnelStore();
   const hasDetails = !!log.details;
+  const associatedTunnel = tunnels.find((t) => t.id === log.tunnelId);
 
   const handleReplay = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!log.details) return;
 
-    const runningTunnel = tunnels.find((t) => t.status === "running") || tunnels[0];
-    const port = runningTunnel?.port || "3000";
-    const url = `http://localhost:${port}${log.details.path}`;
+    const targetPort = associatedTunnel?.port || tunnels.find((t) => t.status === "running")?.port || "3000";
+    const url = `http://localhost:${targetPort}${log.details.path}`;
 
     try {
       await fetch(url, {
@@ -49,6 +50,11 @@ export const LogLine = ({ log }: LogLineProps) => {
         onClick={() => hasDetails && setExpanded(!expanded)}
       >
         <span className="text-white/20 shrink-0 select-none font-medium text-[11.5px] w-[60px]">[{log.time}]</span>
+        {associatedTunnel && (
+          <span className="shrink-0 text-fuchsia-400 bg-fuchsia-500/10 border border-fuchsia-500/20 rounded-md px-1.5 py-0.5 text-[9px] font-bold font-mono">
+            PORT {associatedTunnel.port}
+          </span>
+        )}
         <span className={`shrink-0 min-w-[65px] h-5 font-black text-[9px] tracking-widest px-2 rounded-md flex items-center justify-center uppercase border
           ${log.type === 'INFO' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' :
             log.type === 'SUCCESS' ? 'text-green-400 bg-green-500/10 border-green-500/20' :
