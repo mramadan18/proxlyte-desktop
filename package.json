@@ -2,7 +2,7 @@
   "private": true,
   "name": "proxlyte",
   "productName": "Proxlyte",
-  "description": "Proxlyte is a free and open-source proxy server for Windows, macOS, and Linux.",
+  "description": "Proxlyte is a free and open-source proxy server for Windows.",
   "version": "1.0.0",
   "author": "Mohamed Ramadan <m.ramadan181199@gmail.com>",
   "type": "module",

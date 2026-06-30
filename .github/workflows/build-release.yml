@@ -10,11 +10,7 @@ permissions:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
       - name: Check out Git repository
@@ -38,12 +34,9 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: assets-${{ matrix.os }}
+          name: assets-windows
           path: |
             dist/*.exe
-            dist/*.dmg
-            dist/*.AppImage
-            dist/*.deb
             dist/latest*.yml
           retention-days: 1
 
@@ -62,9 +55,6 @@ jobs:
         with:
           files: |
             dist/*.exe
-            dist/*.dmg
-            dist/*.AppImage
-            dist/*.deb
             dist/latest*.yml
           draft: true # Set to true to review before publishing
           generate_release_notes: true
