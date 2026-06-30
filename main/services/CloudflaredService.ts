@@ -67,17 +67,17 @@ export class CloudflaredService extends EventEmitter {
     });
   }
 
-  public async startQuickTunnel(port: number): Promise<void> {
+  public async startQuickTunnel(port: number, metricsPort?: number): Promise<void> {
     if (this.currentProcess) {
       this.currentProcess.kill();
     }
 
     const cmd = this.getCommand();
-    this.currentProcess = spawn(cmd, [
-      "tunnel",
-      "--url",
-      `http://localhost:${port}`,
-    ]);
+    const args = ["tunnel", "--url", `http://localhost:${port}`];
+    if (metricsPort) {
+      args.push("--metrics", `127.0.0.1:${metricsPort}`);
+    }
+    this.currentProcess = spawn(cmd, args);
 
     this.currentProcess.stdout?.on("data", (data) => {
       const output = data.toString();
@@ -97,7 +97,7 @@ export class CloudflaredService extends EventEmitter {
     });
   }
 
-  public async startCustomTunnel(domain: string, port: number): Promise<void> {
+  public async startCustomTunnel(domain: string, port: number, metricsPort?: number): Promise<void> {
     if (this.currentProcess) {
       this.currentProcess.kill();
     }
@@ -145,13 +145,13 @@ ingress:
         stdio: "ignore",
       });
 
-      this.currentProcess = spawn(cmd, [
-        "tunnel",
-        "--config",
-        configPath,
-        "run",
-        tunnelName,
-      ]);
+      const args = ["tunnel", "--config", configPath];
+      if (metricsPort) {
+        args.push("--metrics", `127.0.0.1:${metricsPort}`);
+      }
+      args.push("run", tunnelName);
+
+      this.currentProcess = spawn(cmd, args);
 
       this.currentProcess.stdout?.on("data", (data) => {
         this.emit("log", data.toString());

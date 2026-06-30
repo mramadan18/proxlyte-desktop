@@ -23,6 +23,18 @@ export function TrafficChart() {
     }));
     setData(initialData);
 
+    let lastDownload = 0;
+    let lastUpload = 0;
+
+    // Listen to real-time traffic data from electron
+    let unsubscribe: (() => void) | undefined;
+    if (typeof window !== "undefined" && window.api && window.api.onTrafficData) {
+      unsubscribe = window.api.onTrafficData((download, upload) => {
+        lastDownload = Math.round(download);
+        lastUpload = Math.round(upload);
+      });
+    }
+
     const interval = setInterval(() => {
       setData((currentData) => {
         const newData = [...currentData.slice(1)];
@@ -30,11 +42,10 @@ export function TrafficChart() {
         const timeLabel = `${now.getHours()}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`;
         
         if (isAnyTunnelRunning) {
-          // Mock data: a base value + random spike
           newData.push({
             time: timeLabel,
-            download: Math.floor(Math.random() * 80) + 10,
-            upload: Math.floor(Math.random() * 30) + 5,
+            download: lastDownload,
+            upload: lastUpload,
           });
         } else {
           newData.push({
@@ -47,7 +58,10 @@ export function TrafficChart() {
       });
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (unsubscribe) unsubscribe();
+    };
   }, [isAnyTunnelRunning]);
 
   return (

@@ -46,6 +46,12 @@ const api = {
     ipcRenderer.on("tunnel-error", handler);
     return () => ipcRenderer.removeListener("tunnel-error", handler);
   },
+  onTrafficData: (callback: (download: number, upload: number) => void) => {
+    const handler = (_event: any, download: number, upload: number) =>
+      callback(download, upload);
+    ipcRenderer.on("traffic-data", handler);
+    return () => ipcRenderer.removeListener("traffic-data", handler);
+  },
 
   // Storage & System
   storeGet: (key: string) => ipcRenderer.invoke("store-get", key),
