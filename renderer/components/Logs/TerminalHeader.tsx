@@ -1,4 +1,4 @@
-import { Tooltip, TooltipTrigger, TooltipContent, Button } from "@heroui/react";
+import { Tooltip, Button } from "@heroui/react";
 import { Copy, Trash2, Power } from "lucide-react";
 import { useLogsStore } from "../../store/logsStore";
 
@@ -25,40 +25,41 @@ export const TerminalHeader = () => {
         </span>
       </div>
       <div className="flex items-center gap-2 sm:gap-3">
-        <TooltipTrigger>
-          <Button
-            size="sm"
-            isIconOnly
-            variant="ghost"
-            onClick={handleCopy}
-            className="text-white/30 hover:text-white hover:bg-white/10 w-8 h-8 sm:w-9 sm:h-9 min-w-8 border-none"
-          >
-            <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </Button>
-          <Tooltip>
-            <TooltipContent className="bg-white/10 backdrop-blur-lg border border-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
-              Copy Output
-            </TooltipContent>
-          </Tooltip>
-        </TooltipTrigger>
+        <Tooltip>
+          <Tooltip.Trigger>
+            <Button
+              size="sm"
+              isIconOnly
+              variant="ghost"
+              onClick={handleCopy}
+              className="text-white/30 hover:text-white hover:bg-white/10 w-8 h-8 sm:w-9 sm:h-9 min-w-8 border-none"
+            >
+              <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Content className="bg-white/10 backdrop-blur-lg border border-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
+            Copy Output
+          </Tooltip.Content>
+        </Tooltip>
 
-        <TooltipTrigger>
-          <Button
-            size="sm"
-            isIconOnly
-            variant="ghost"
-            onClick={clearLogs}
-            className="text-white/30 hover:text-red-500 hover:bg-red-500/10 w-8 h-8 sm:w-9 sm:h-9 min-w-8 border-none"
-          >
-            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </Button>
-          <Tooltip>
-            <TooltipContent className="bg-red-500/20 backdrop-blur-lg border border-red-500/40 text-red-500 px-3 py-1.5 rounded-lg text-xs font-bold">
-              Clear Console
-            </TooltipContent>
-          </Tooltip>
-        </TooltipTrigger>
+        <Tooltip>
+          <Tooltip.Trigger>
+            <Button
+              size="sm"
+              isIconOnly
+              variant="ghost"
+              onClick={clearLogs}
+              className="text-white/30 hover:text-red-500 hover:bg-red-500/10 w-8 h-8 sm:w-9 sm:h-9 min-w-8 border-none"
+            >
+              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Content className="bg-red-500/20 backdrop-blur-lg border border-red-500/40 text-red-500 px-3 py-1.5 rounded-lg text-xs font-bold">
+            Clear Console
+          </Tooltip.Content>
+        </Tooltip>
       </div>
     </div>
   );
 };
+
