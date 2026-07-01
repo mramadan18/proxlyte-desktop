@@ -1,11 +1,13 @@
 import { ipcMain, Notification, WebContents } from "electron";
 import { CloudflaredService } from "./CloudflaredService";
+import { ProxyManager } from "./ProxyManager";
 import net from "net";
 
 export class TunnelManager {
   private services: Map<string, CloudflaredService> = new Map();
   private lastTunnels: Map<string, { domain: string | null; port: number }> = new Map();
   private activeMetrics: Map<string, { port: number; lastRx: number; lastTx: number }> = new Map();
+  private proxyManager: ProxyManager = new ProxyManager();
   private pollInterval: NodeJS.Timeout | null = null;
   private autoReconnect: boolean = true;
   private eventSender: WebContents | null = null;
@@ -87,10 +89,12 @@ export class TunnelManager {
         this.startPolling();
       }
 
+      const localPort = this.proxyManager.getProxyPort(tunnelId) || last.port;
+
       if (last.domain) {
-        await service.startCustomTunnel(last.domain, last.port, metricsPort);
+        await service.startCustomTunnel(last.domain, localPort, metricsPort);
       } else {
-        await service.startQuickTunnel(last.port, metricsPort);
+        await service.startQuickTunnel(localPort, metricsPort);
       }
     }, 5000);
   }
@@ -165,14 +169,17 @@ export class TunnelManager {
 
     ipcMain.handle("start-quick-tunnel", async (event, tunnelId: string, port: number) => {
       this.eventSender = event.sender;
+      this.proxyManager.setEventSender(event.sender);
       this.lastTunnels.set(tunnelId, { domain: null, port });
       
+      const proxyPort = await this.proxyManager.startProxy(tunnelId, port);
+
       const metricsPort = await this.getFreePort();
       this.activeMetrics.set(tunnelId, { port: metricsPort, lastRx: 0, lastTx: 0 });
       this.startPolling();
 
       const service = this.getOrCreateService(tunnelId);
-      await service.startQuickTunnel(port, metricsPort);
+      await service.startQuickTunnel(proxyPort, metricsPort);
       return true;
     });
 
@@ -180,20 +187,24 @@ export class TunnelManager {
       "start-custom-tunnel",
       async (event, tunnelId: string, params: { domain: string; port: number }) => {
         this.eventSender = event.sender;
+        this.proxyManager.setEventSender(event.sender);
         this.lastTunnels.set(tunnelId, { domain: params.domain, port: params.port });
         
+        const proxyPort = await this.proxyManager.startProxy(tunnelId, params.port);
+
         const metricsPort = await this.getFreePort();
         this.activeMetrics.set(tunnelId, { port: metricsPort, lastRx: 0, lastTx: 0 });
         this.startPolling();
 
         const service = this.getOrCreateService(tunnelId);
-        await service.startCustomTunnel(params.domain, params.port, metricsPort);
+        await service.startCustomTunnel(params.domain, proxyPort, metricsPort);
         return true;
       },
     );
 
     ipcMain.handle("stop-tunnel", (event, tunnelId: string) => {
       this.eventSender = event.sender;
+      this.proxyManager.stopProxy(tunnelId);
       this.lastTunnels.delete(tunnelId);
       this.activeMetrics.delete(tunnelId);
       if (this.activeMetrics.size === 0) {
@@ -214,6 +225,7 @@ export class TunnelManager {
 
   public cleanup() {
     this.stopPolling();
+    this.proxyManager.cleanup();
     this.activeMetrics.clear();
     this.services.forEach((service) => {
       service.stopTunnel();

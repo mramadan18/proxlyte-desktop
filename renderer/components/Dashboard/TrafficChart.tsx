@@ -9,14 +9,11 @@ interface DataPoint {
 }
 
 export function TrafficChart() {
-  const { tunnels } = useTunnelStore();
-  const isAnyTunnelRunning = tunnels.some((t) => t.status === "running");
-
   const [data, setData] = useState<DataPoint[]>([]);
 
   useEffect(() => {
     // Generate initial flat data
-    const initialData = Array.from({ length: 20 }).map((_, i) => ({
+    const initialData = Array.from({ length: 20 }).map(() => ({
       time: "",
       download: 0,
       upload: 0,
@@ -41,7 +38,9 @@ export function TrafficChart() {
         const now = new Date();
         const timeLabel = `${now.getHours()}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`;
         
-        if (isAnyTunnelRunning) {
+        const isRunning = useTunnelStore.getState().tunnels.some((t) => t.status === "running");
+        
+        if (isRunning) {
           newData.push({
             time: timeLabel,
             download: lastDownload,
@@ -62,7 +61,7 @@ export function TrafficChart() {
       clearInterval(interval);
       if (unsubscribe) unsubscribe();
     };
-  }, [isAnyTunnelRunning]);
+  }, []);
 
   return (
     <div className="w-full bg-(--glass-bg) backdrop-blur-md border border-(--glass-border) rounded-2xl p-5 mb-6 shadow-sm relative overflow-hidden">

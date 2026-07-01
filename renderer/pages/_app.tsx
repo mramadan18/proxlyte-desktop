@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Layout } from "../components/Layout";
 import { useTunnelStore } from "../store/tunnelStore";
 import { useLogsStore } from "../store/logsStore";
+import { useTrafficStore } from "../store/trafficStore";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/router";
 import { UpdateNotification } from "../components/Updates/UpdateNotification";
@@ -17,6 +18,10 @@ function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {
     useTunnelStore.getState().setupListeners();
     useLogsStore.getState().setupListeners();
+    const cleanupTraffic = useTrafficStore.getState().setupListeners();
+    return () => {
+      if (cleanupTraffic) cleanupTraffic();
+    };
   }, []);
 
   return (

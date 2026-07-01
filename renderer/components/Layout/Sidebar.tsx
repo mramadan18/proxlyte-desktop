@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Settings, Terminal, Activity, Cloud } from "lucide-react";
+import { Settings, Terminal, Activity, Cloud, Eye } from "lucide-react";
 import { useTunnelStore } from "../../store/tunnelStore";
 
 export function Sidebar() {
@@ -13,6 +13,7 @@ export function Sidebar() {
   const tabs = [
     { id: "dashboard", label: "Overview", icon: Activity, href: "/home" },
     { id: "domains", label: "Domains", icon: Cloud, href: "/domains" },
+    { id: "inspector", label: "HTTP Inspector", icon: Eye, href: "/inspector" },
     { id: "logs", label: "Console", icon: Terminal, href: "/logs" },
     { id: "settings", label: "Preferences", icon: Settings, href: "/settings" },
   ];

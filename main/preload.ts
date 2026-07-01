@@ -53,6 +53,11 @@ const api = {
     ipcRenderer.on("traffic-data", handler);
     return () => ipcRenderer.removeListener("traffic-data", handler);
   },
+  onTrafficRequest: (callback: (log: any) => void) => {
+    const handler = (_event: any, log: any) => callback(log);
+    ipcRenderer.on("traffic-request-logged", handler);
+    return () => ipcRenderer.removeListener("traffic-request-logged", handler);
+  },
 
   // Storage & System
   openExternal: (url: string) => ipcRenderer.invoke("open-external", url),
