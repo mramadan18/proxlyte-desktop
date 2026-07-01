@@ -24,5 +24,7 @@ nsis:
   runAfterFinish: true
   installerIcon: "resources/icon.ico"
   uninstallerIcon: "resources/icon.ico"
+  installerSidebar: "resources/installerSidebar.bmp"
+  uninstallerSidebar: "resources/installerSidebar.bmp"
   license: resources/license.txt
   include: resources/installer.nsh

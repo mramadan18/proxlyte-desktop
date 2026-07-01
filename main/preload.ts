@@ -66,6 +66,10 @@ const api = {
   // Updates
   checkForUpdates: () => ipcRenderer.send("check-for-updates"),
   installUpdate: () => ipcRenderer.send("install-update"),
+  onUpdateChecking: (callback: () => void) => {
+    ipcRenderer.on("update-checking", callback);
+    return () => ipcRenderer.removeListener("update-checking", callback);
+  },
   onUpdateMessage: (callback: (message: string) => void) => {
     const handler = (_event: any, message: string) => callback(message);
     ipcRenderer.on("update-message", handler);

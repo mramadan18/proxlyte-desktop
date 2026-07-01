@@ -7,6 +7,10 @@ export const useUpdateHandlers = () => {
   useEffect(() => {
     if (typeof window === "undefined" || !window.api) return;
 
+    const cleanupChecking = window.api.onUpdateChecking?.(() => {
+      setStatus("checking");
+    }) || (() => {});
+
     const cleanupMessage = window.api.onUpdateMessage((message) => {
       setMessage(message);
     });
@@ -35,6 +39,7 @@ export const useUpdateHandlers = () => {
     });
 
     return () => {
+      cleanupChecking();
       cleanupMessage();
       cleanupAvailable();
       cleanupNotAvailable();

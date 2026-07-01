@@ -4,6 +4,10 @@
   "productName": "Proxlyte",
   "description": "Proxlyte is a free and open-source proxy server for Windows.",
   "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mramadan18/proxlyte-desktop.git"
+  },
   "author": "Mohamed Ramadan <m.ramadan181199@gmail.com>",
   "type": "module",
   "main": "app/main.js",

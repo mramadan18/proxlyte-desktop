@@ -1,6 +1,6 @@
 import updater from "electron-updater";
 const { autoUpdater } = updater;
-import { BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import log from "electron-log";
 
 // Configure logging for updates
@@ -19,22 +19,22 @@ export class UpdateManager {
   private setupHandlers() {
     autoUpdater.on("checking-for-update", () => {
       this.sendStatusToWindow("Checking for update...");
+      this.sendToWindow("update-checking");
     });
 
     autoUpdater.on("update-available", (info) => {
       this.sendStatusToWindow("Update available.");
-      // Optional: notify renderer to show a "Downloading..." UI
-      this.mainWindow.webContents.send("update-available", info);
+      this.sendToWindow("update-available", info);
     });
 
     autoUpdater.on("update-not-available", (info) => {
       this.sendStatusToWindow("Update not available.");
-      this.mainWindow.webContents.send("update-not-available");
+      this.sendToWindow("update-not-available");
     });
 
     autoUpdater.on("error", (err) => {
       this.sendStatusToWindow("Error in auto-updater. " + err);
-      this.mainWindow.webContents.send("update-error", err.toString());
+      this.sendToWindow("update-error", err.toString());
     });
 
     autoUpdater.on("download-progress", (progressObj) => {
@@ -50,34 +50,47 @@ export class UpdateManager {
       this.sendStatusToWindow(log_message);
 
       // Send detailed progress to renderer
-      this.mainWindow.webContents.send("update-download-progress", progressObj);
+      this.sendToWindow("update-download-progress", progressObj);
     });
 
     autoUpdater.on("update-downloaded", (info) => {
       this.sendStatusToWindow("Update downloaded");
       // Notify renderer that update is ready to install
-      this.mainWindow.webContents.send("update-downloaded");
+      this.sendToWindow("update-downloaded");
     });
 
     // Handle IPC from renderer
     ipcMain.on("check-for-updates", () => {
+      if (!app.isPackaged || process.env.NODE_ENV !== "production") {
+        this.sendStatusToWindow("Update checks are disabled in development mode.");
+        this.sendToWindow("update-not-available");
+        return;
+      }
       autoUpdater.checkForUpdatesAndNotify();
     });
 
     ipcMain.on("install-update", () => {
-      autoUpdater.quitAndInstall();
+      // isSilent: false, isForceRunAfter: true (ensure app restarts after installer completes)
+      autoUpdater.quitAndInstall(false, true);
     });
   }
 
   public check() {
-    // Only check for updates in production
-    if (process.env.NODE_ENV === "production") {
+    // Only check for updates in production when packaged
+    if (app.isPackaged && process.env.NODE_ENV === "production") {
       autoUpdater.checkForUpdatesAndNotify();
+    }
+  }
+
+  private sendToWindow(channel: string, ...args: any[]) {
+    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+      this.mainWindow.webContents.send(channel, ...args);
     }
   }
 
   private sendStatusToWindow(text: string) {
     log.info(text);
-    this.mainWindow.webContents.send("update-message", text);
+    this.sendToWindow("update-message", text);
   }
 }
+
