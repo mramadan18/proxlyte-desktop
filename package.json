@@ -13,7 +13,7 @@
   "main": "app/main.js",
   "scripts": {
     "dev": "nextron --renderer-port 1000",
-    "build": "nextron build",
+    "build": "nextron build --win --x64",
     "postinstall": "patch-package && electron-builder install-app-deps",
     "release:beta": "npm version prerelease --preid=beta -m \"chore(release): %s\" && git push origin main --tags",
     "release:patch": "npm version patch -m \"chore(release): %s\" && git push origin main --tags",

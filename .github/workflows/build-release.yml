@@ -1,4 +1,4 @@
-name: Proxlyte Build & Release
+name: Proxlyte Windows Build & Release
 
 on:
   push:
@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   build:
+    name: Build Windows Application
     runs-on: windows-latest
 
     steps:
@@ -23,26 +24,30 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build
+      - name: Build Windows Application
         # We removed --publish to control the upload ourselves
         run: npm run build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Artifacts
+      - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: assets-windows
           path: |
             dist/*.exe
+            dist/*.blockmap
             dist/latest*.yml
           retention-days: 1
 
   publish:
+    name: Publish Release
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -55,6 +60,7 @@ jobs:
         with:
           files: |
             dist/*.exe
+            dist/*.blockmap
             dist/latest*.yml
           draft: true # Set to true to review before publishing
           generate_release_notes: true

@@ -26,16 +26,13 @@ version-resolver:
 template: |
   # 🌐 Proxlyte - $RESOLVED_VERSION
 
-  We are pleased to announce the release of **Proxlyte** $RESOLVED_VERSION, a powerful and open-source proxy tool. This update focuses on stability, build automation, and cross-platform support.
+  We are pleased to announce the release of **Proxlyte** $RESOLVED_VERSION, a powerful and open-source proxy server for Windows. This update focuses on stability, performance, and build automation.
 
-  ## 🚀 Direct Download Links
+  ## 🚀 Direct Download Link
 
-  | Operating System | File Type | Download Link |
-  | :--- | :--- | :--- |
-  | **Windows** | 🪟 Setup (.exe) | [Download for Windows](https://github.com/mramadan18/proxlyte-desktop/releases/download/v$RESOLVED_VERSION/Proxlyte-Setup-$RESOLVED_VERSION.exe) |
-  | **macOS** | 🍎 Apple Silicon (.dmg) | [Download for macOS](https://github.com/mramadan18/proxlyte-desktop/releases/download/v$RESOLVED_VERSION/Proxlyte-$RESOLVED_VERSION-arm64.dmg) |
-  | **Linux** | 🐧 AppImage | [Download for Linux (AppImage)](https://github.com/mramadan18/proxlyte-desktop/releases/download/v$RESOLVED_VERSION/Proxlyte-$RESOLVED_VERSION.AppImage) |
-  | **Linux** | 📦 Debian (.deb) | [Download for Linux (Debian)](https://github.com/mramadan18/proxlyte-desktop/releases/download/v$RESOLVED_VERSION/proxlyte_$RESOLVED_VERSION_amd64.deb) |
+  | Operating System | File Type | Architecture | Download Link |
+  | :--- | :--- | :--- | :--- |
+  | **Windows 10/11** | 🪟 Setup (.exe) | **x64 (64-bit)** | [Download Setup (.exe)](https://github.com/mramadan18/proxlyte-desktop/releases/download/v$RESOLVED_VERSION/Proxlyte-Setup-$RESOLVED_VERSION.exe) |
 
   ---
 

@@ -15,9 +15,13 @@ publish:
   owner: mramadan18
   repo: proxlyte-desktop
 win:
-  target: nsis
+  target:
+    - target: nsis
+      arch:
+        - x64
   icon: resources/icon.ico
 nsis:
+  artifactName: "${productName}-Setup-${version}.${ext}"
   oneClick: false
   perMachine: true
   allowToChangeInstallationDirectory: true
