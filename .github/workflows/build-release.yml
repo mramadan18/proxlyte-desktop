@@ -55,14 +55,21 @@ jobs:
           path: ./dist
           merge-multiple: true
 
-      - name: Create Release
+      - name: Generate Release Notes
+        id: release_drafter
+        uses: release-drafter/release-drafter@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release with Assets
         uses: softprops/action-gh-release@v2
         with:
+          name: ${{ steps.release_drafter.outputs.name || github.ref_name }}
+          body: ${{ steps.release_drafter.outputs.body }}
           files: |
             dist/*.exe
             dist/*.blockmap
             dist/latest*.yml
           draft: true # Set to true to review before publishing
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
