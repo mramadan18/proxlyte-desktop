@@ -72,7 +72,7 @@ class ProxlyteApp {
     this.tunnelManager = new TunnelManager();
     this.tunnelManager.registerIpcHandlers();
     WindowManager.bindWindowEvents(this.mainWindow);
-    this.trayManager = new TrayManager(this.mainWindow);
+    this.trayManager = new TrayManager(this.mainWindow, this.tunnelManager);
     this.updateManager = new UpdateManager(this.mainWindow);
 
     // Load Content

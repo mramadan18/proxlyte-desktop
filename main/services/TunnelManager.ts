@@ -1,4 +1,4 @@
-import { ipcMain, Notification, WebContents } from "electron";
+import { ipcMain, Notification, BrowserWindow } from "electron";
 import { CloudflaredService } from "./CloudflaredService";
 import { ProxyManager } from "./ProxyManager";
 import net from "net";
@@ -10,7 +10,6 @@ export class TunnelManager {
   private proxyManager: ProxyManager = new ProxyManager();
   private pollInterval: NodeJS.Timeout | null = null;
   private autoReconnect: boolean = true;
-  private eventSender: WebContents | null = null;
 
   constructor() {
     // No single service creation in constructor anymore.
@@ -37,18 +36,28 @@ export class TunnelManager {
     });
   }
 
+  private broadcast(channel: string, ...args: any[]) {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (!win.isDestroyed() && !win.webContents.isDestroyed()) {
+        win.webContents.send(channel, ...args);
+      }
+    });
+  }
+
   private setupInternalListeners(tunnelId: string, service: CloudflaredService) {
     // Global notifications
     service.on("url", (url) => {
+      const last = this.lastTunnels.get(tunnelId);
+      if (last) {
+        last.domain = url;
+      }
       new Notification({
         title: "Tunnel Active",
         body: `Your project is now live at ${url}`,
         silent: false,
       }).show();
       
-      if (this.eventSender) {
-        this.eventSender.send("tunnel-url", tunnelId, url);
-      }
+      this.broadcast("tunnel-url", tunnelId, url);
     });
 
     service.on("error", (error) => {
@@ -57,15 +66,11 @@ export class TunnelManager {
         body: `Failed to establish connection: ${error}`,
       }).show();
 
-      if (this.eventSender) {
-        this.eventSender.send("tunnel-error", tunnelId, error);
-      }
+      this.broadcast("tunnel-error", tunnelId, error);
     });
 
     service.on("log", (log) => {
-      if (this.eventSender) {
-        this.eventSender.send("tunnel-log", tunnelId, log);
-      }
+      this.broadcast("tunnel-log", tunnelId, log);
     });
 
     service.on("close", (code) => {
@@ -132,9 +137,7 @@ export class TunnelManager {
         }
       }
 
-      if (this.eventSender) {
-        this.eventSender.send("traffic-data", totalDownload, totalUpload);
-      }
+      this.broadcast("traffic-data", totalDownload, totalUpload);
     }, 1000);
   }
 
@@ -156,8 +159,7 @@ export class TunnelManager {
       return await tempService.checkInstallation();
     });
 
-    ipcMain.handle("cloudflared-login", async (event) => {
-      this.eventSender = event.sender;
+    ipcMain.handle("cloudflared-login", async () => {
       const tempService = new CloudflaredService();
       try {
         await tempService.login();
@@ -167,9 +169,7 @@ export class TunnelManager {
       }
     });
 
-    ipcMain.handle("start-quick-tunnel", async (event, tunnelId: string, port: number) => {
-      this.eventSender = event.sender;
-      this.proxyManager.setEventSender(event.sender);
+    ipcMain.handle("start-quick-tunnel", async (_event, tunnelId: string, port: number) => {
       this.lastTunnels.set(tunnelId, { domain: null, port });
       
       const proxyPort = await this.proxyManager.startProxy(tunnelId, port);
@@ -185,9 +185,7 @@ export class TunnelManager {
 
     ipcMain.handle(
       "start-custom-tunnel",
-      async (event, tunnelId: string, params: { domain: string; port: number }) => {
-        this.eventSender = event.sender;
-        this.proxyManager.setEventSender(event.sender);
+      async (_event, tunnelId: string, params: { domain: string; port: number }) => {
         this.lastTunnels.set(tunnelId, { domain: params.domain, port: params.port });
         
         const proxyPort = await this.proxyManager.startProxy(tunnelId, params.port);
@@ -202,8 +200,7 @@ export class TunnelManager {
       },
     );
 
-    ipcMain.handle("stop-tunnel", (event, tunnelId: string) => {
-      this.eventSender = event.sender;
+    ipcMain.handle("stop-tunnel", (_event, tunnelId: string) => {
       this.proxyManager.stopProxy(tunnelId);
       this.lastTunnels.delete(tunnelId);
       this.activeMetrics.delete(tunnelId);
@@ -221,6 +218,22 @@ export class TunnelManager {
     ipcMain.handle("get-active-tunnels", () => {
       return Array.from(this.services.keys());
     });
+
+    ipcMain.handle("stop-all-tunnels", () => {
+      this.cleanup();
+      return true;
+    });
+  }
+
+  public getActiveTunnelsInfo(): Array<{ id: string; url: string | null; port: number }> {
+    const list: Array<{ id: string; url: string | null; port: number }> = [];
+    this.services.forEach((service, id) => {
+      const info = this.lastTunnels.get(id);
+      if (info) {
+        list.push({ id, url: info.domain, port: info.port });
+      }
+    });
+    return list;
   }
 
   public cleanup() {

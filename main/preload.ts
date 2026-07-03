@@ -7,6 +7,12 @@ const api = {
   close: () => ipcRenderer.send("window-close"),
   isMaximized: () => ipcRenderer.invoke("is-window-maximized"),
 
+  // Tray & Window controls
+  showMainWindow: () => ipcRenderer.send("tray-show-main"),
+  hideTrayWindow: () => ipcRenderer.send("tray-hide"),
+  quitApp: () => ipcRenderer.send("tray-quit"),
+  updateTrayTooltip: (text: string) => ipcRenderer.send("update-tray-tooltip", text),
+
   // Tunnel controls
   checkAuth: () => ipcRenderer.invoke("check-auth"),
   checkInstallation: () => ipcRenderer.invoke("check-installation"),
@@ -18,6 +24,7 @@ const api = {
     params: { domain: string; port: number },
   ) => ipcRenderer.invoke("start-custom-tunnel", tunnelId, params),
   stopTunnel: (tunnelId: string) => ipcRenderer.invoke("stop-tunnel", tunnelId),
+  stopAllTunnels: () => ipcRenderer.invoke("stop-all-tunnels"),
   getActiveTunnels: () => ipcRenderer.invoke("get-active-tunnels"),
 
   // Events
@@ -103,6 +110,21 @@ const api = {
     const handler = (_event: any, err: string) => callback(err);
     ipcRenderer.on("update-error", handler);
     return () => ipcRenderer.removeListener("update-error", handler);
+  },
+  onTriggerQuickTunnel: (callback: (port: string) => void) => {
+    const handler = (_event: any, port: string) => callback(port);
+    ipcRenderer.on("trigger-quick-tunnel", handler);
+    return () => ipcRenderer.removeListener("trigger-quick-tunnel", handler);
+  },
+  onTriggerStopAll: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on("trigger-stop-all", handler);
+    return () => ipcRenderer.removeListener("trigger-stop-all", handler);
+  },
+  onTrayArrowPos: (callback: (pos: number) => void) => {
+    const handler = (_event: any, pos: number) => callback(pos);
+    ipcRenderer.on("tray-arrow-pos", handler);
+    return () => ipcRenderer.removeListener("tray-arrow-pos", handler);
   },
 };
 

@@ -1,4 +1,4 @@
-import { WebContents } from "electron";
+import { BrowserWindow } from "electron";
 import http from "http";
 import net from "net";
 
@@ -18,13 +18,8 @@ export interface TrafficRequestLog {
 
 export class ProxyManager {
   private servers: Map<string, http.Server> = new Map();
-  private eventSender: WebContents | null = null;
 
   constructor() {}
-
-  public setEventSender(sender: WebContents) {
-    this.eventSender = sender;
-  }
 
   private getFreePort(): Promise<number> {
     return new Promise((resolve) => {
@@ -37,7 +32,10 @@ export class ProxyManager {
     });
   }
 
-  public async startProxy(tunnelId: string, targetPort: number): Promise<number> {
+  public async startProxy(
+    tunnelId: string,
+    targetPort: number,
+  ): Promise<number> {
     const proxyPort = await this.getFreePort();
 
     const server = http.createServer((req, res) => {
@@ -51,13 +49,18 @@ export class ProxyManager {
 
       req.on("end", () => {
         const reqBuffer = Buffer.concat(reqChunks);
-        const reqContentType = (req.headers["content-type"] || "").toLowerCase();
-        const isReqText = reqContentType.includes("json") || 
-                          reqContentType.includes("text") || 
-                          reqContentType.includes("xml") || 
-                          reqContentType.includes("form") ||
-                          reqContentType.includes("javascript");
-        const reqBody = isReqText ? reqBuffer.toString("utf8") : `[Binary Data: ${reqBuffer.length} bytes]`;
+        const reqContentType = (
+          req.headers["content-type"] || ""
+        ).toLowerCase();
+        const isReqText =
+          reqContentType.includes("json") ||
+          reqContentType.includes("text") ||
+          reqContentType.includes("xml") ||
+          reqContentType.includes("form") ||
+          reqContentType.includes("javascript");
+        const reqBody = isReqText
+          ? reqBuffer.toString("utf8")
+          : `[Binary Data: ${reqBuffer.length} bytes]`;
 
         const proxyReq = http.request(
           {
@@ -69,7 +72,7 @@ export class ProxyManager {
           },
           (proxyRes) => {
             const resChunks: Buffer[] = [];
-            
+
             res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
 
             proxyRes.on("data", (chunk) => {
@@ -81,13 +84,18 @@ export class ProxyManager {
               res.end();
               const latency = Date.now() - startTime;
               const resBuffer = Buffer.concat(resChunks);
-              const resContentType = (proxyRes.headers["content-type"] || "").toLowerCase();
-              const isResText = resContentType.includes("json") || 
-                                resContentType.includes("text") || 
-                                resContentType.includes("xml") || 
-                                resContentType.includes("form") ||
-                                resContentType.includes("javascript");
-              const resBody = isResText ? resBuffer.toString("utf8") : `[Binary Data: ${resBuffer.length} bytes]`;
+              const resContentType = (
+                proxyRes.headers["content-type"] || ""
+              ).toLowerCase();
+              const isResText =
+                resContentType.includes("json") ||
+                resContentType.includes("text") ||
+                resContentType.includes("xml") ||
+                resContentType.includes("form") ||
+                resContentType.includes("javascript");
+              const resBody = isResText
+                ? resBuffer.toString("utf8")
+                : `[Binary Data: ${resBuffer.length} bytes]`;
 
               this.sendTrafficLog({
                 id: reqId,
@@ -99,17 +107,22 @@ export class ProxyManager {
                 reqBody,
                 statusCode: proxyRes.statusCode,
                 resHeaders: proxyRes.headers,
-                resBody: resBody.length > 5000 ? resBody.substring(0, 5000) + "... (truncated)" : resBody,
+                resBody:
+                  resBody.length > 5000
+                    ? resBody.substring(0, 5000) + "... (truncated)"
+                    : resBody,
                 latency,
               });
             });
-          }
+          },
         );
 
         proxyReq.on("error", (err) => {
           res.writeHead(502, { "Content-Type": "text/plain" });
-          res.end(`Bad Gateway: Failed to forward request to local port ${targetPort}. Error: ${err.message}`);
-          
+          res.end(
+            `Bad Gateway: Failed to forward request to local port ${targetPort}. Error: ${err.message}`,
+          );
+
           const latency = Date.now() - startTime;
           this.sendTrafficLog({
             id: reqId,
@@ -132,7 +145,9 @@ export class ProxyManager {
 
     server.listen(proxyPort, "127.0.0.1");
     this.servers.set(tunnelId, server);
-    console.log(`Proxy server started for tunnel ${tunnelId} on port ${proxyPort} -> target ${targetPort}`);
+    console.log(
+      `Proxy server started for tunnel ${tunnelId} on port ${proxyPort} -> target ${targetPort}`,
+    );
     return proxyPort;
   }
 
@@ -153,9 +168,11 @@ export class ProxyManager {
   }
 
   private sendTrafficLog(log: TrafficRequestLog) {
-    if (this.eventSender) {
-      this.eventSender.send("traffic-request-logged", log);
-    }
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (!win.isDestroyed() && !win.webContents.isDestroyed()) {
+        win.webContents.send("traffic-request-logged", log);
+      }
+    });
   }
 
   public cleanup() {

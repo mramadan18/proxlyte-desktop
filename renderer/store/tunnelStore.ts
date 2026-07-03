@@ -167,7 +167,6 @@ export const useTunnelStore = create<TunnelState>()(
         const { tunnels, updateTunnel } = get();
         const tunnel = tunnels.find((t) => t.id === id);
         if (!tunnel) return;
-
         const nextStatus =
           tunnel.status === "running" || tunnel.status === "starting"
             ? "stopped"
@@ -175,8 +174,14 @@ export const useTunnelStore = create<TunnelState>()(
 
         if (typeof window !== "undefined" && window.api) {
           if (nextStatus === "starting") {
+            const isPortBusy = tunnels.some(
+              (t) => t.id !== id && t.port === tunnel.port && (t.status === "running" || t.status === "starting")
+            );
+            if (isPortBusy) {
+              alert(`Port ${tunnel.port} is already active on another tunnel!`);
+              return;
+            }
             updateTunnel(id, { status: "starting", publicUrl: undefined }); // Optimistic UI update
-
             try {
               const portNum = parseInt(tunnel.port, 10) || 3000;
               if (tunnel.domainType === "custom" && tunnel.baseDomain) {
