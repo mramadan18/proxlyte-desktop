@@ -23,6 +23,7 @@ class ProxlyteApp {
     app.name = "Proxlyte";
     if (process.platform === "win32") {
       app.setAppUserModelId("com.nextspacey.proxlyte");
+      app.setAsDefaultProtocolClient("Proxlyte");
     }
     this.setupEnvironment();
     this.setupLock();
