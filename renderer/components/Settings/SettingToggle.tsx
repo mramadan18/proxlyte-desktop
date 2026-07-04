@@ -20,7 +20,7 @@ export function SettingToggle({
   return (
     <div
       className={`flex items-center justify-between py-4 ${
-        !isLast ? "border-b border-white/5" : ""
+        !isLast ? "border-b border-(--glass-border-light)" : ""
       }`}
     >
       <div className="flex items-center gap-4">
@@ -29,32 +29,32 @@ export function SettingToggle({
             ${
               isEnabled
                 ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.1)]"
-                : "bg-white/5 text-white/40 border border-white/10"
+                : "bg-(--glass-bg) text-(--text-muted) border border-(--glass-border-light)"
             }
           `}
         >
           <Icon className="w-5 h-5" />
         </div>
         <div className="flex flex-col gap-0.5">
-          <h3 className="text-sm font-bold text-white tracking-wide">
+          <h3 className="text-sm font-bold text-(--text-main) tracking-wide">
             {title}
           </h3>
-          <p className="text-[11px] font-medium text-white/40">{description}</p>
+          <p className="text-[11px] font-medium text-(--text-muted)/80">{description}</p>
         </div>
       </div>
 
       <button
         onClick={onToggle}
-        className={`relative w-11 h-6 rounded-full transition-all duration-500 outline-none p-1 shrink-0
+        className={`relative w-11 h-6 rounded-full transition-all duration-500 outline-none p-1 shrink-0 border
           ${
             isEnabled
-              ? "bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.4)]"
-              : "bg-white/10"
+              ? "bg-indigo-600 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.4)]"
+              : "bg-slate-300 dark:bg-white/10 border-black/15 dark:border-white/10"
           }
         `}
       >
         <div
-          className={`w-4 h-4 rounded-full bg-white transition-all duration-500 shadow-sm transform
+          className={`w-4 h-4 rounded-full bg-white transition-all duration-500 shadow-md transform
             ${isEnabled ? "translate-x-5" : "translate-x-0"}
           `}
         />

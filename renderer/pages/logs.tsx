@@ -7,7 +7,7 @@ export default function LogsPage() {
   const { logs } = useLogsStore();
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6 h-full min-h-[calc(100vh-8rem)] pb-8">
+    <div className="flex flex-col gap-4 sm:gap-6 h-full min-h-[calc(100vh-5.5rem)] pb-4">
       <Head>
         <title>Console - Proxlyte</title>
       </Head>
@@ -29,11 +29,16 @@ export default function LogsPage() {
             {logs.map((log, i) => (
               <LogLine key={i} log={log} />
             ))}
-            
+
             {logs.length === 0 && (
               <div className="flex flex-col items-center justify-center my-auto py-16 text-(--text-muted)/40 gap-2 text-center">
-                <span className="text-xs font-mono tracking-wider">No process logs recorded yet...</span>
-                <span className="text-[10px] text-(--text-muted)/30">Start a tunnel or perform an action to generate live telemetry.</span>
+                <span className="text-xs font-mono tracking-wider">
+                  No process logs recorded yet...
+                </span>
+                <span className="text-[10px] text-(--text-muted)/30">
+                  Start a tunnel or perform an action to generate live
+                  telemetry.
+                </span>
               </div>
             )}
           </div>

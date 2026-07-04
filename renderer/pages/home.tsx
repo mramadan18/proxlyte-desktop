@@ -14,10 +14,10 @@ export default function HomePage() {
       </Head>
 
       {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-(--glass-bg)/40 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-(--glass-border) shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-(--glass-bg) backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-(--glass-border) shadow-sm">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2.5">
-            <h1 className="text-lg sm:text-xl font-extrabold text-transparent bg-clip-text bg-linear-to-br from-white via-white/90 to-white/60 tracking-tight">
+            <h1 className="text-lg sm:text-xl font-extrabold text-transparent bg-clip-text bg-linear-to-br from-(--text-main) via-(--text-main)/90 to-(--text-main)/60 tracking-tight">
               Active Tunnels
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-violet-500/15 text-violet-300 border border-violet-500/30 flex items-center gap-1">

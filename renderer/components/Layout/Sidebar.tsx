@@ -32,7 +32,7 @@ export function Sidebar() {
           <img
             src="/images/logo-with-bg.png"
             alt="Proxlyte Logo"
-            className={`w-8 h-8 rounded-lg shadow-lg border border-white/10 transition-all duration-700
+            className={`w-8 h-8 rounded-lg shadow-lg border border-(--glass-border-light) transition-all duration-700
             ${overallStatus === "running" ? "brightness-110 contrast-110" : "grayscale opacity-50"}`}
           />
           {overallStatus === "running" && (
@@ -40,7 +40,7 @@ export function Sidebar() {
           )}
         </div>
         <div>
-          <h1 className="text-base font-bold tracking-tight bg-clip-text text-transparent bg-linear-to-br from-white to-white/50 leading-none">
+          <h1 className="text-base font-bold tracking-tight bg-clip-text text-transparent bg-linear-to-br from-(--text-main) to-(--text-main)/60 leading-none">
             Proxlyte
           </h1>
           <div className="flex items-center gap-1 mt-0.5">

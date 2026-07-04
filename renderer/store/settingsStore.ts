@@ -25,6 +25,7 @@ export interface AppSettings {
   autoReconnect: boolean;
   notifications: boolean;
   darkMode: boolean;
+  theme?: "system" | "light" | "dark";
   minimizeToTray: boolean;
   closeToTray: boolean;
   customDomains: string[];
@@ -49,6 +50,7 @@ export const useSettingsStore = create<SettingsState>()(
         autoReconnect: true,
         notifications: true,
         darkMode: true,
+        theme: "dark",
         minimizeToTray: true,
         closeToTray: true,
         customDomains: [],
@@ -105,10 +107,11 @@ export const useSettingsStore = create<SettingsState>()(
             "Receive desktop alerts for connections, errors, and system events.",
         },
         {
-          id: "darkMode",
+          id: "theme",
           icon: Monitor,
-          title: "Deep Dark Aesthetic",
-          description: "Enable the premium digital obsidian interface mode.",
+          title: "Interface Appearance",
+          description:
+            "Select your preferred visual theme: System default, Light mode, or Dark mode.",
         },
         {
           id: "minimizeToTray",
@@ -132,6 +135,7 @@ export const useSettingsStore = create<SettingsState>()(
             autoReconnect: true,
             notifications: true,
             darkMode: true,
+            theme: "dark",
             minimizeToTray: true,
             closeToTray: true,
             customDomains: [],

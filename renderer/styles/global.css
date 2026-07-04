@@ -2,6 +2,8 @@
 @import "@heroui/styles";
 @source "../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: var(--font-main);
   --font-display: var(--font-main);
@@ -43,7 +45,8 @@
   }
 }
 
-:root {
+:root,
+.dark {
   /* Colors */
   --bg-main: #050505;
   --bg-body: #030303;
@@ -78,6 +81,37 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
+.light {
+  /* Colors - Premium cool silver/slate background with frosted crisp white glass */
+  --bg-main: #e2e8f0;
+  --bg-body: #cbd5e1;
+  --bg-surface: #ffffff;
+
+  /* Accents - Rich vibrant indigo/violet for light backgrounds */
+  --accent-primary: #7c3aed;
+  --accent-secondary: #4f46e5;
+  --accent-indigo: #6366f1;
+  --accent-fuchsia: #c026d3;
+  --accent-blue: #2563eb;
+
+  /* Semantic */
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+
+  /* Glass/Glassmorphism - Pure white frosted glass with crisp borders */
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(0, 0, 0, 0.12);
+  --glass-border-light: rgba(0, 0, 0, 0.18);
+  --glass-highlight: rgba(0, 0, 0, 0.05);
+
+  /* Text - High contrast dark slate/navy */
+  --text-main: #0f172a;
+  --text-muted: rgba(15, 23, 42, 0.7);
+  --text-dim: rgba(15, 23, 42, 0.5);
+  --text-extra-dim: rgba(15, 23, 42, 0.3);
+}
+
 @layer base {
   html,
   body {
@@ -89,18 +123,169 @@
 
 @layer utilities {
   .glass {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--glass-bg);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
   }
 
   .glass-dark {
-    background: rgba(0, 0, 0, 0.4);
+    background: var(--glass-bg);
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+  }
+
+  /* ========================================================
+     INTELLIGENT LIGHT MODE COLOR & CONTRAST OVERRIDES
+     ======================================================== */
+
+  /* Text Colors: Make 300/400/500 shades darker and richer for crisp contrast on light backgrounds */
+  .light [class*="text-emerald-300"],
+  .light [class*="text-emerald-400"],
+  .light [class*="text-emerald-500"],
+  .light [class*="text-green-400"] {
+    color: #059669 !important; /* emerald-600 */
+  }
+
+  .light [class*="text-violet-300"],
+  .light [class*="text-violet-400"],
+  .light [class*="text-violet-500"] {
+    color: #6d28d9 !important; /* violet-700 */
+  }
+
+  .light [class*="text-indigo-300"],
+  .light [class*="text-indigo-400"],
+  .light [class*="text-indigo-500"] {
+    color: #4338ca !important; /* indigo-700 */
+  }
+
+  .light [class*="text-fuchsia-400"],
+  .light [class*="text-fuchsia-500"],
+  .light [class*="text-pink-400"] {
+    color: #a21caf !important; /* fuchsia-700 */
+  }
+
+  .light [class*="text-rose-400"],
+  .light [class*="text-rose-500"],
+  .light [class*="text-red-400"],
+  .light [class*="text-red-500"] {
+    color: #be123c !important; /* rose-700 */
+  }
+
+  .light [class*="text-amber-400"],
+  .light [class*="text-yellow-400"] {
+    color: #b45309 !important; /* amber-700 */
+  }
+
+  .light [class*="text-blue-400"],
+  .light [class*="text-blue-500"],
+  .light [class*="text-sky-400"] {
+    color: #1d4ed8 !important; /* blue-700 */
+  }
+
+  /* Badge / Button Background Tints: Increase opacity slightly for visibility on white */
+  .light [class*="bg-emerald-500/10"],
+  .light [class*="bg-emerald-400/10"],
+  .light [class*="bg-green-500/10"] {
+    background-color: rgba(16, 185, 129, 0.18) !important;
+  }
+  .light [class*="border-emerald-500/"],
+  .light [class*="border-emerald-400/"],
+  .light [class*="border-green-500/"] {
+    border-color: rgba(5, 150, 105, 0.35) !important;
+  }
+
+  .light [class*="bg-indigo-500/10"],
+  .light [class*="bg-indigo-400/10"] {
+    background-color: rgba(99, 102, 241, 0.15) !important;
+  }
+  .light [class*="border-indigo-500/"],
+  .light [class*="border-indigo-400/"] {
+    border-color: rgba(67, 56, 202, 0.35) !important;
+  }
+
+  .light [class*="bg-violet-500/10"],
+  .light [class*="bg-violet-400/10"] {
+    background-color: rgba(139, 92, 246, 0.15) !important;
+  }
+  .light [class*="border-violet-500/"],
+  .light [class*="border-violet-400/"] {
+    border-color: rgba(109, 40, 217, 0.35) !important;
+  }
+
+  .light [class*="bg-rose-500/10"],
+  .light [class*="bg-red-500/10"] {
+    background-color: rgba(244, 63, 94, 0.15) !important;
+  }
+  .light [class*="border-rose-500/"],
+  .light [class*="border-red-500/"] {
+    border-color: rgba(190, 18, 60, 0.35) !important;
+  }
+
+  .light [class*="bg-amber-500/10"],
+  .light [class*="bg-yellow-500/10"] {
+    background-color: rgba(245, 158, 11, 0.18) !important;
+  }
+  .light [class*="border-amber-500/"],
+  .light [class*="border-yellow-500/"] {
+    border-color: rgba(180, 83, 9, 0.35) !important;
+  }
+
+  .light [class*="bg-blue-500/10"],
+  .light [class*="bg-sky-500/10"] {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+  }
+  .light [class*="border-blue-500/"],
+  .light [class*="border-sky-500/"] {
+    border-color: rgba(29, 78, 216, 0.35) !important;
+  }
+
+  /* Make sure inputs and cards have crisp borders and distinct backgrounds in Light Mode */
+  .light input,
+  .light select {
+    background-color: #ffffff !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
+    color: var(--text-main) !important;
+  }
+  .light input::placeholder {
+    color: rgba(15, 23, 42, 0.4) !important;
+  }
+
+  .light [class*="border-white/"]:not(button *) {
+    border-color: rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .light [class*="bg-white/1"],
+  .light [class*="bg-white/2"],
+  .light [class*="bg-white/3"],
+  .light [class*="bg-white/5"] {
+    background-color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  .light [class*="bg-black/"]:not(button *) {
+    background-color: rgba(241, 245, 249, 0.85) !important;
+  }
+
+  .light .bg-clip-text[class*="from-white"] {
+    --tw-gradient-from: #0f172a !important;
+    --tw-gradient-to: rgba(15, 23, 42, 0.6) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+
+  .light [class*="text-white"]:not(button *):not([class*="from-"]):not([class*="bg-"]):not([class*="text-white/"]) {
+    color: var(--text-main) !important;
+  }
+
+  .light [class*="text-white/"]:not(button *) {
+    color: var(--text-muted) !important;
+  }
+
+  /* Make toggle switches crisp and visible when OFF in light mode */
+  .light button[class*="rounded-full"][class*="w-11"]:not([class*="bg-indigo-"]) {
+    background-color: #cbd5e1 !important; /* slate-300 */
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
   }
 
   /* Custom scrollbar for webkit */
@@ -117,5 +302,12 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.2);
+  }
+
+  .light ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.18);
+  }
+  .light ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.28);
   }
 }

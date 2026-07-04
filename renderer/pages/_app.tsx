@@ -4,6 +4,7 @@ import { Layout } from "../components/Layout";
 import { useTunnelStore } from "../store/tunnelStore";
 import { useLogsStore } from "../store/logsStore";
 import { useTrafficStore } from "../store/trafficStore";
+import { useSettingsStore } from "../store/settingsStore";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/router";
 import { UpdateNotification } from "../components/Updates/UpdateNotification";
@@ -13,7 +14,40 @@ import { useUpdateHandlers } from "../hooks/useUpdateHandlers";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
+  const { settings } = useSettingsStore();
   useUpdateHandlers();
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const currentTheme = settings.theme || (settings.darkMode === false ? "light" : "dark");
+
+    const applyTheme = () => {
+      let isDark = true;
+      if (currentTheme === "system") {
+        isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      } else {
+        isDark = currentTheme === "dark";
+      }
+
+      if (isDark) {
+        root.classList.add("dark");
+        root.classList.remove("light");
+      } else {
+        root.classList.add("light");
+        root.classList.remove("dark");
+      }
+    };
+
+    applyTheme();
+
+    if (currentTheme === "system") {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      const handler = () => applyTheme();
+      mediaQuery.addEventListener("change", handler);
+      return () => mediaQuery.removeEventListener("change", handler);
+    }
+    return;
+  }, [settings.theme, settings.darkMode]);
 
   useEffect(() => {
     useTunnelStore.getState().setupListeners();

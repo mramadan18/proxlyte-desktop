@@ -60,12 +60,12 @@ export default function DomainsPage() {
               onChange={(e) => setNewDomain(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAddDomain()}
               placeholder="e.g. example.com"
-              className="px-4 rounded-xl text-sm outline-none transition-all h-10 border bg-white/5 text-(--text-main) border-white/10 hover:border-white/20 focus:border-emerald-500/50 focus:bg-white/10 flex-1 min-w-0"
+              className="px-4 rounded-xl text-sm outline-none transition-all h-10 border bg-white/5 text-(--text-main) border-(--glass-border-light) hover:border-(--glass-border) focus:border-emerald-500/50 flex-1 min-w-0"
             />
             <button
               onClick={handleAddDomain}
               disabled={!newDomain.trim()}
-              className="flex items-center gap-2 px-6 rounded-xl text-sm font-bold transition-all h-10 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed border border-emerald-500/20 shrink-0"
+              className="flex items-center gap-2 px-6 rounded-xl text-sm font-bold transition-all h-10 bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50 disabled:cursor-not-allowed border border-emerald-500/20 shrink-0 cursor-pointer"
             >
               <Plus size={16} />
               Add Domain
