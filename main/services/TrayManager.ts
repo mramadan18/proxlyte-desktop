@@ -89,10 +89,9 @@ export class TrayManager {
       }
     });
 
-    // Minimize to tray: prevent normal minimize and hide instead
-    this.mainWindow.on("minimize", (event) => {
-      if (this.getSetting("minimizeToTray", false)) {
-        event.preventDefault();
+    // Minimize to tray: hide when minimized
+    this.mainWindow.on("minimize", () => {
+      if (this.getSetting("minimizeToTray", true)) {
         this.mainWindow.hide();
       }
     });

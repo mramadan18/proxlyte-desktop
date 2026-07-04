@@ -31,6 +31,17 @@ export interface AppSettings {
   customDomains: string[];
 }
 
+const defaultSettings: AppSettings = {
+  startOnBoot: false,
+  autoReconnect: true,
+  notifications: true,
+  darkMode: true,
+  theme: "dark",
+  minimizeToTray: true,
+  closeToTray: true,
+  customDomains: [],
+};
+
 interface SettingsState {
   settings: AppSettings;
   toggleSetting: (key: keyof AppSettings) => void;
@@ -45,19 +56,10 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      settings: {
-        startOnBoot: false,
-        autoReconnect: true,
-        notifications: true,
-        darkMode: true,
-        theme: "dark",
-        minimizeToTray: true,
-        closeToTray: true,
-        customDomains: [],
-      },
-      toggleSetting: (key) =>
-        set((state) => {
-          const val = state.settings[key];
+      settings: { ...defaultSettings },
+      toggleSetting: (key: keyof AppSettings) =>
+        set((state: SettingsState) => {
+          const val = state.settings[key] !== undefined ? state.settings[key] : defaultSettings[key];
           if (typeof val === "boolean") {
             const newVal = !val;
             if (
@@ -71,8 +73,8 @@ export const useSettingsStore = create<SettingsState>()(
           }
           return state;
         }),
-      updateSetting: (key, value) =>
-        set((state) => {
+      updateSetting: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) =>
+        set((state: SettingsState) => {
           if (
             key === "startOnBoot" &&
             typeof window !== "undefined" &&
@@ -130,22 +132,24 @@ export const useSettingsStore = create<SettingsState>()(
       ],
       resetSettings: () =>
         set({
-          settings: {
-            startOnBoot: false,
-            autoReconnect: true,
-            notifications: true,
-            darkMode: true,
-            theme: "dark",
-            minimizeToTray: true,
-            closeToTray: true,
-            customDomains: [],
-          },
+          settings: { ...defaultSettings },
         }),
     }),
     {
       name: "proxlyte-settings",
       storage: createJSONStorage(() => electronStorage),
       partialize: (state) => ({ settings: state.settings }),
+      merge: (persistedState: any, currentState: any) => {
+        const persistedSettings = (persistedState as any)?.settings || {};
+        return {
+          ...currentState,
+          ...persistedState,
+          settings: {
+            ...currentState.settings,
+            ...persistedSettings,
+          },
+        };
+      },
     },
   ),
 );
