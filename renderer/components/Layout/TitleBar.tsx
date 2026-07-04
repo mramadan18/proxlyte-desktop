@@ -34,7 +34,7 @@ export function TitleBar() {
   };
 
   return (
-    <div className="flex justify-between items-center w-full h-10 shrink-0 relative [-webkit-app-region:drag] z-50 group select-none overflow-hidden">
+    <div className="flex justify-between items-center w-full h-10 shrink-0 relative [-webkit-app-region:drag] z-50 group select-none overflow-hidden bg-white/40 dark:bg-black/20 backdrop-blur-md border-b border-(--glass-border-light)">
       {/* Brand Section */}
       <div className="relative flex-1 h-full flex items-center px-4 gap-3">
         <div className="flex items-center gap-2.5">

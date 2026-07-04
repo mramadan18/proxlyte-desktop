@@ -3,13 +3,28 @@ import { useRouter } from "next/router";
 import { Settings, Terminal, Cloud, Eye, Network } from "lucide-react";
 import { useTunnelStore } from "../../store/tunnelStore";
 import { TrafficChart } from "../Dashboard/TrafficChart";
+import { useState, useEffect } from "react";
+import { useSettingsStore } from "../../store/settingsStore";
 
 export function Sidebar() {
   const { tunnels } = useTunnelStore();
+  const { settings } = useSettingsStore();
   const router = useRouter();
+  const [logoSrc, setLogoSrc] = useState("/images/logo-with-bg.png");
 
   const isAnyTunnelRunning = tunnels.some((t) => t.status === "running");
   const overallStatus = isAnyTunnelRunning ? "running" : "stopped";
+
+  useEffect(() => {
+    const currentTheme = settings.theme || (settings.darkMode === false ? "light" : "dark");
+    let isLight = false;
+    if (currentTheme === "system") {
+      isLight = !window.matchMedia("(prefers-color-scheme: dark)").matches;
+    } else {
+      isLight = currentTheme === "light";
+    }
+    setLogoSrc(isLight ? "/images/logo-with-bg-light.png" : "/images/logo-with-bg.png");
+  }, [settings.theme, settings.darkMode]);
 
   const tabs = [
     { id: "dashboard", label: "Tunnels", icon: Network, href: "/home" },
@@ -30,7 +45,7 @@ export function Sidebar() {
       <div className="px-4 py-4 flex items-center border-b border-(--glass-highlight) [-webkit-app-region:drag]">
         <div className="relative mr-2.5 group">
           <img
-            src="/images/logo-with-bg.png"
+            src={logoSrc}
             alt="Proxlyte Logo"
             className={`w-8 h-8 rounded-lg shadow-lg border border-(--glass-border-light) transition-all duration-700
             ${overallStatus === "running" ? "brightness-110 contrast-110" : "grayscale opacity-50"}`}

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Bell, Zap, RotateCcw, Monitor, Minimize2, EyeOff } from "lucide-react";
+import { Bell, Zap, RotateCcw, Minimize2, EyeOff } from "lucide-react";
 
 const electronStorage = {
   getItem: async (name: string): Promise<string | null> => {
@@ -29,6 +29,7 @@ export interface AppSettings {
   minimizeToTray: boolean;
   closeToTray: boolean;
   customDomains: string[];
+  customPorts: string[];
 }
 
 const defaultSettings: AppSettings = {
@@ -40,6 +41,7 @@ const defaultSettings: AppSettings = {
   minimizeToTray: true,
   closeToTray: true,
   customDomains: [],
+  customPorts: ["3000", "5173", "8000", "8080", "5000"],
 };
 
 interface SettingsState {
@@ -107,13 +109,6 @@ export const useSettingsStore = create<SettingsState>()(
           title: "System Notifications",
           description:
             "Receive desktop alerts for connections, errors, and system events.",
-        },
-        {
-          id: "theme",
-          icon: Monitor,
-          title: "Interface Appearance",
-          description:
-            "Select your preferred visual theme: System default, Light mode, or Dark mode.",
         },
         {
           id: "minimizeToTray",
