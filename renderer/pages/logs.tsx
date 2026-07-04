@@ -1,11 +1,10 @@
 import Head from "next/head";
-import { Cpu } from "lucide-react";
 import { LogLine } from "../components/Logs/LogLine";
 import { TerminalHeader } from "../components/Logs/TerminalHeader";
 import { useLogsStore } from "../store/logsStore";
 
 export default function LogsPage() {
-  const { logs, getCurrentTimestamp } = useLogsStore();
+  const { logs } = useLogsStore();
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6 h-full min-h-[calc(100vh-8rem)] pb-8">
@@ -31,20 +30,12 @@ export default function LogsPage() {
               <LogLine key={i} log={log} />
             ))}
             
-            {/* Placeholder for future Bento items */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mt-6">
-              <div className="bg-(--glass-bg) border border-(--glass-highlight) rounded-xl sm:rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col justify-between aspect-auto sm:aspect-square">
-                <span className="text-(--text-muted)/40 shrink-0 select-none font-medium mb-3 sm:mb-0 text-[10px] sm:text-[11px]">[{getCurrentTimestamp()}]</span>
-                <div className="flex items-center gap-2">
-                  <span className="w-1.5 sm:w-2 h-3 sm:h-3.5 bg-fuchsia-400 shadow-[0_0_12px_rgba(232,121,249,0.8)] animate-pulse rounded-[1px]" />
-                  <span className="text-[10px] font-black text-fuchsia-400/40 uppercase tracking-widest leading-none">Awaiting Instruction</span>
-                </div>
+            {logs.length === 0 && (
+              <div className="flex flex-col items-center justify-center my-auto py-16 text-(--text-muted)/40 gap-2 text-center">
+                <span className="text-xs font-mono tracking-wider">No process logs recorded yet...</span>
+                <span className="text-[10px] text-(--text-muted)/30">Start a tunnel or perform an action to generate live telemetry.</span>
               </div>
-              <div className="bg-(--glass-bg) border border-(--glass-highlight) rounded-xl sm:rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col justify-between aspect-auto sm:aspect-square">
-                <Cpu className="w-3.5 h-3.5 text-(--accent-fuchsia)/30 mb-3 sm:mb-0" />
-                <p className="text-[9px] font-bold text-(--text-muted)/40 uppercase tracking-widest">Subsystem Status: Fully Operational</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
