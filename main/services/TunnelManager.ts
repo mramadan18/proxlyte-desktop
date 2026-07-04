@@ -10,6 +10,7 @@ export class TunnelManager {
   private proxyManager: ProxyManager = new ProxyManager();
   private pollInterval: NodeJS.Timeout | null = null;
   private autoReconnect: boolean = true;
+  public onStateChange?: () => void;
 
   constructor() {
     // No single service creation in constructor anymore.
@@ -58,6 +59,7 @@ export class TunnelManager {
       }).show();
       
       this.broadcast("tunnel-url", tunnelId, url);
+      this.onStateChange?.();
     });
 
     service.on("error", (error) => {
@@ -67,6 +69,7 @@ export class TunnelManager {
       }).show();
 
       this.broadcast("tunnel-error", tunnelId, error);
+      this.onStateChange?.();
     });
 
     service.on("log", (log) => {
@@ -78,6 +81,7 @@ export class TunnelManager {
         console.log(`Tunnel ${tunnelId} closed unexpectedly. Attempting to reconnect...`);
         this.attemptReconnect(tunnelId);
       }
+      this.onStateChange?.();
     });
   }
 
@@ -180,6 +184,7 @@ export class TunnelManager {
 
       const service = this.getOrCreateService(tunnelId);
       await service.startQuickTunnel(proxyPort, metricsPort);
+      this.onStateChange?.();
       return true;
     });
 
@@ -196,22 +201,13 @@ export class TunnelManager {
 
         const service = this.getOrCreateService(tunnelId);
         await service.startCustomTunnel(params.domain, proxyPort, metricsPort);
+        this.onStateChange?.();
         return true;
       },
     );
 
     ipcMain.handle("stop-tunnel", (_event, tunnelId: string) => {
-      this.proxyManager.stopProxy(tunnelId);
-      this.lastTunnels.delete(tunnelId);
-      this.activeMetrics.delete(tunnelId);
-      if (this.activeMetrics.size === 0) {
-        this.stopPolling();
-      }
-      const service = this.services.get(tunnelId);
-      if (service) {
-        service.stopTunnel();
-        this.services.delete(tunnelId);
-      }
+      this.stopTunnel(tunnelId);
       return true;
     });
 
@@ -234,6 +230,36 @@ export class TunnelManager {
       }
     });
     return list;
+  }
+
+  /**
+   * Stops a single tunnel and broadcasts the stop event to all renderer windows.
+   * Used by TrayManager for individual tunnel control from the tray menu.
+   */
+  public stopTunnel(tunnelId: string) {
+    this.proxyManager.stopProxy(tunnelId);
+    this.lastTunnels.delete(tunnelId);
+    this.activeMetrics.delete(tunnelId);
+    if (this.activeMetrics.size === 0) {
+      this.stopPolling();
+    }
+    const service = this.services.get(tunnelId);
+    if (service) {
+      service.stopTunnel();
+      this.services.delete(tunnelId);
+    }
+    // Notify renderer so it can update its store
+    this.broadcast("tunnel-stopped-from-main", tunnelId);
+    this.onStateChange?.();
+  }
+
+  /**
+   * Stops all active tunnels individually, broadcasting each stop to the renderer.
+   * Used by TrayManager "Stop All" action.
+   */
+  public stopAllTunnels() {
+    const tunnelIds = Array.from(this.services.keys());
+    tunnelIds.forEach((id) => this.stopTunnel(id));
   }
 
   public cleanup() {

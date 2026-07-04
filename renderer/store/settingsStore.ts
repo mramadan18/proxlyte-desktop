@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Bell, Zap, RotateCcw, Monitor } from "lucide-react";
+import { Bell, Zap, RotateCcw, Monitor, Minimize2, EyeOff } from "lucide-react";
 
 const electronStorage = {
   getItem: async (name: string): Promise<string | null> => {
@@ -25,6 +25,8 @@ export interface AppSettings {
   autoReconnect: boolean;
   notifications: boolean;
   darkMode: boolean;
+  minimizeToTray: boolean;
+  closeToTray: boolean;
   customDomains: string[];
 }
 
@@ -47,6 +49,8 @@ export const useSettingsStore = create<SettingsState>()(
         autoReconnect: true,
         notifications: true,
         darkMode: true,
+        minimizeToTray: false,
+        closeToTray: true,
         customDomains: [],
       },
       toggleSetting: (key) =>
@@ -106,6 +110,20 @@ export const useSettingsStore = create<SettingsState>()(
           title: "Deep Dark Aesthetic",
           description: "Enable the premium digital obsidian interface mode.",
         },
+        {
+          id: "minimizeToTray",
+          icon: Minimize2,
+          title: "Minimize to Tray",
+          description:
+            "Hide the window to system tray when minimized instead of taskbar.",
+        },
+        {
+          id: "closeToTray",
+          icon: EyeOff,
+          title: "Close to Tray",
+          description:
+            "Hide to system tray instead of quitting when you close the window.",
+        },
       ],
       resetSettings: () =>
         set({
@@ -114,6 +132,8 @@ export const useSettingsStore = create<SettingsState>()(
             autoReconnect: true,
             notifications: true,
             darkMode: true,
+            minimizeToTray: false,
+            closeToTray: true,
             customDomains: [],
           },
         }),

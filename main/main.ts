@@ -4,6 +4,7 @@ import serve from "electron-serve";
 import { createWindow } from "./helpers/create-window";
 import { WindowManager } from "./services/WindowManager";
 import { TunnelManager } from "./services/TunnelManager";
+import { TrayManager } from "./services/TrayManager";
 import Store from "electron-store";
 import { ipcMain } from "electron";
 import { UpdateManager } from "./services/UpdateManager";
@@ -16,6 +17,7 @@ class ProxlyteApp {
   private mainWindow: BrowserWindow | null = null;
   private tunnelManager: TunnelManager | null = null;
   private updateManager: UpdateManager | null = null;
+  private trayManager: TrayManager | null = null;
 
   constructor() {
     app.name = "Proxlyte";
@@ -72,6 +74,12 @@ class ProxlyteApp {
     this.tunnelManager.registerIpcHandlers();
     WindowManager.bindWindowEvents(this.mainWindow);
     this.updateManager = new UpdateManager(this.mainWindow);
+    this.trayManager = new TrayManager(
+      this.mainWindow,
+      this.tunnelManager,
+      store,
+    );
+    this.tunnelManager.onStateChange = () => this.trayManager?.rebuildMenu();
 
     // Load Content
     const shouldShow = !process.argv.includes("--hidden");
@@ -123,6 +131,9 @@ class ProxlyteApp {
   }
 
   private cleanup() {
+    if (this.trayManager) {
+      this.trayManager.destroy();
+    }
     if (this.tunnelManager) {
       this.tunnelManager.cleanup();
     }

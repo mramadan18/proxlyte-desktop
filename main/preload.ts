@@ -48,6 +48,12 @@ const api = {
     ipcRenderer.on("tunnel-error", handler);
     return () => ipcRenderer.removeListener("tunnel-error", handler);
   },
+  onTunnelStoppedFromMain: (callback: (tunnelId: string) => void) => {
+    const handler = (_event: any, tunnelId: string) => callback(tunnelId);
+    ipcRenderer.on("tunnel-stopped-from-main", handler);
+    return () =>
+      ipcRenderer.removeListener("tunnel-stopped-from-main", handler);
+  },
   onTrafficData: (callback: (download: number, upload: number) => void) => {
     const handler = (_event: any, download: number, upload: number) =>
       callback(download, upload);

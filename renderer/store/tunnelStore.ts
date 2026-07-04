@@ -105,6 +105,12 @@ export const useTunnelStore = create<TunnelState>()(
           window.api.onTunnelError((tunnelId: string, error: string) => {
             get().updateTunnel(tunnelId, { status: "error" });
           });
+          window.api.onTunnelStoppedFromMain((tunnelId: string) => {
+            get().updateTunnel(tunnelId, {
+              status: "stopped",
+              publicUrl: undefined,
+            });
+          });
           
           get().checkCloudflared();
           get().checkAuth();
