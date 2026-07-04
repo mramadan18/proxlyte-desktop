@@ -69,7 +69,7 @@ export class TrayManager {
     this.tray = new Tray(icon.resize({ width: 16, height: 16 }));
     this.tray.setToolTip("Proxlyte — No active tunnels");
 
-    this.tray.on("double-click", () => {
+    this.tray.on("click", () => {
       this.showWindow();
     });
 
