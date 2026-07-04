@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Settings, Terminal, Activity, Cloud, Eye } from "lucide-react";
+import { Settings, Terminal, Cloud, Eye, Network } from "lucide-react";
 import { useTunnelStore } from "../../store/tunnelStore";
+import { TrafficChart } from "../Dashboard/TrafficChart";
 
 export function Sidebar() {
   const { tunnels } = useTunnelStore();
@@ -11,7 +12,7 @@ export function Sidebar() {
   const overallStatus = isAnyTunnelRunning ? "running" : "stopped";
 
   const tabs = [
-    { id: "dashboard", label: "Overview", icon: Activity, href: "/home" },
+    { id: "dashboard", label: "Tunnels", icon: Network, href: "/home" },
     { id: "domains", label: "Domains", icon: Cloud, href: "/domains" },
     { id: "inspector", label: "HTTP Inspector", icon: Eye, href: "/inspector" },
     { id: "logs", label: "Console", icon: Terminal, href: "/logs" },
@@ -82,6 +83,11 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Live Network Telemetry Widget at Bottom of Sidebar */}
+      <div className="px-2.5 pb-3 [-webkit-app-region:no-drag]">
+        <TrafficChart />
+      </div>
     </aside>
   );
 }

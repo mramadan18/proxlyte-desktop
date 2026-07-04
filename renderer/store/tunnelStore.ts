@@ -66,7 +66,6 @@ export const useTunnelStore = create<TunnelState>()(
       addTunnel: () => {
         set((state) => ({
           tunnels: [
-            ...state.tunnels,
             {
               id: generateId(),
               port: "8080",
@@ -76,6 +75,7 @@ export const useTunnelStore = create<TunnelState>()(
               baseDomain: "",
               status: "stopped",
             },
+            ...state.tunnels,
           ],
         }));
       },
