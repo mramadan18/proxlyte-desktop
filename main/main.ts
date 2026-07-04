@@ -4,7 +4,6 @@ import serve from "electron-serve";
 import { createWindow } from "./helpers/create-window";
 import { WindowManager } from "./services/WindowManager";
 import { TunnelManager } from "./services/TunnelManager";
-import { TrayManager } from "./services/TrayManager";
 import Store from "electron-store";
 import { ipcMain } from "electron";
 import { UpdateManager } from "./services/UpdateManager";
@@ -16,7 +15,6 @@ const isProd = process.env.NODE_ENV === "production";
 class ProxlyteApp {
   private mainWindow: BrowserWindow | null = null;
   private tunnelManager: TunnelManager | null = null;
-  private trayManager: TrayManager | null = null;
   private updateManager: UpdateManager | null = null;
 
   constructor() {
@@ -73,7 +71,6 @@ class ProxlyteApp {
     this.tunnelManager = new TunnelManager();
     this.tunnelManager.registerIpcHandlers();
     WindowManager.bindWindowEvents(this.mainWindow);
-    this.trayManager = new TrayManager(this.mainWindow, this.tunnelManager);
     this.updateManager = new UpdateManager(this.mainWindow);
 
     // Load Content
@@ -110,10 +107,6 @@ class ProxlyteApp {
       if (url.startsWith("http://") || url.startsWith("https://")) {
         await shell.openExternal(url);
       }
-    });
-
-    app.on("before-quit", () => {
-      if (this.trayManager) this.trayManager.setQuitting(true);
     });
 
     app.on("window-all-closed", () => {
