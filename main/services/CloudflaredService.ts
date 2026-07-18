@@ -1,9 +1,12 @@
-import { spawn, exec, execSync, ChildProcess } from "child_process";
+import { spawn, exec, ChildProcess } from "child_process";
 import { EventEmitter } from "events";
 import fs from "fs";
 import path from "path";
 import os from "os";
 import { app } from "electron";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 export class CloudflaredService extends EventEmitter {
   private currentProcess: ChildProcess | null = null;
@@ -67,10 +70,11 @@ export class CloudflaredService extends EventEmitter {
     });
   }
 
-  public async startQuickTunnel(port: number, metricsPort?: number): Promise<void> {
-    if (this.currentProcess) {
-      this.currentProcess.kill();
-    }
+  public async startQuickTunnel(
+    port: number,
+    metricsPort?: number,
+  ): Promise<void> {
+    this.stopTunnel();
 
     const cmd = this.getCommand();
     const args = ["tunnel", "--url", `http://localhost:${port}`];
@@ -97,26 +101,30 @@ export class CloudflaredService extends EventEmitter {
     });
   }
 
-  public async startCustomTunnel(domain: string, port: number, metricsPort?: number): Promise<void> {
-    if (this.currentProcess) {
-      this.currentProcess.kill();
-    }
+  public async startCustomTunnel(
+    domain: string,
+    port: number,
+    metricsPort?: number,
+  ): Promise<void> {
+    this.stopTunnel();
 
     const cmd = this.getCommand();
     const tunnelName = domain.replace(/\./g, "-");
 
     try {
+      // Step 1: delete existing tunnel (non-blocking)
       try {
-        execSync(`${cmd} tunnel delete -f ${tunnelName}`, {
+        await execAsync(`${cmd} tunnel delete -f ${tunnelName}`, {
           stdio: "ignore",
-        });
+        } as any);
       } catch (e) {
         // ignore fail
       }
 
-      const createOutput = execSync(
+      // Step 2: create tunnel (non-blocking)
+      const { stdout: createOutput } = await execAsync(
         `${cmd} tunnel create ${tunnelName} 2>&1`,
-      ).toString();
+      );
       const idMatch = createOutput.match(
         /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i,
       );
@@ -141,10 +149,12 @@ ingress:
 `;
       fs.writeFileSync(configPath, configContent);
 
-      execSync(`${cmd} tunnel route dns -f ${tunnelName} ${domain}`, {
+      // Step 3: route DNS (non-blocking)
+      await execAsync(`${cmd} tunnel route dns -f ${tunnelName} ${domain}`, {
         stdio: "ignore",
-      });
+      } as any);
 
+      // Step 4: run tunnel
       const args = ["tunnel", "--config", configPath];
       if (metricsPort) {
         args.push("--metrics", `127.0.0.1:${metricsPort}`);
@@ -178,11 +188,47 @@ ingress:
     }
   }
 
+  /**
+   * Forcefully terminates the cloudflared child process.
+   * On Windows uses taskkill /F /T to kill the process tree.
+   * On other platforms uses SIGKILL.
+   */
   public stopTunnel() {
-    if (this.currentProcess) {
-      this.currentProcess.kill();
-      this.currentProcess = null;
+    if (!this.currentProcess) return;
+
+    const pid = this.currentProcess.pid;
+    const isWin = os.platform() === "win32";
+
+    if (pid) {
+      try {
+        if (isWin) {
+          // Force kill the whole process tree on Windows
+          exec(`taskkill /F /T /PID ${pid}`, () => {
+            // ignore errors
+          });
+        } else {
+          this.currentProcess.kill("SIGKILL");
+        }
+      } catch (e) {
+        // ignore
+      }
     }
+
+    // Fallback kill after a short delay if process is still alive
+    setTimeout(() => {
+      if (this.currentProcess && !this.currentProcess.killed) {
+        try {
+          if (isWin && pid) {
+            exec(`taskkill /F /T /PID ${pid}`);
+          } else {
+            this.currentProcess.kill("SIGKILL");
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      this.currentProcess = null;
+    }, 300);
   }
 
   private parseUrl(output: string) {

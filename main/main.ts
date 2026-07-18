@@ -1,5 +1,5 @@
 import path from "path";
-import { app, BrowserWindow, shell } from "electron";
+import { app, BrowserWindow, shell, crashReporter } from "electron";
 import serve from "electron-serve";
 import { createWindow } from "./helpers/create-window";
 import { WindowManager } from "./services/WindowManager";
@@ -12,6 +12,28 @@ import { UpdateManager } from "./services/UpdateManager";
 const store = new Store();
 
 const isProd = process.env.NODE_ENV === "production";
+
+// ── Crash Reporter ─────────────────────────────────────────────────────────
+if (isProd) {
+  crashReporter.start({
+    submitURL: "",
+    uploadToServer: false,
+    compress: true,
+  });
+}
+
+// ── Global Process Error Handlers ──────────────────────────────────────────
+process.on("uncaughtException", (error) => {
+  console.error("[FATAL] Uncaught Exception:", error);
+  // Give a brief moment for logs to flush before exiting
+  setTimeout(() => {
+    app.exit(1);
+  }, 500);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("[FATAL] Unhandled Rejection at:", promise, "reason:", reason);
+});
 
 class ProxlyteApp {
   private mainWindow: BrowserWindow | null = null;

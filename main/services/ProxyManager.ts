@@ -16,6 +16,16 @@ export interface TrafficRequestLog {
   latency?: number;
 }
 
+/**
+ * Max response body to capture per request (larger bodies are truncated).
+ */
+const MAX_BODY_CAPTURE = 5000;
+
+/**
+ * Max response body to send over IPC per request (even harsher limit for IPC safety).
+ */
+const MAX_IPC_BODY = 2000;
+
 export class ProxyManager {
   private servers: Map<string, http.Server> = new Map();
 
@@ -40,106 +50,165 @@ export class ProxyManager {
 
     const server = http.createServer((req, res) => {
       const startTime = Date.now();
-      const reqId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+      const reqId = `req_${Date.now()}_${Math.random()
+        .toString(36)
+        .substr(2, 5)}`;
 
-      const reqChunks: Buffer[] = [];
-      req.on("data", (chunk) => {
-        reqChunks.push(chunk);
-      });
+      // --- Collect request body for logging (up to limit) ---
+      let reqBodyCaptured = false;
+      let reqBodyText = "";
+      let reqBodySize = 0;
+      const reqContentType = (
+        req.headers["content-type"] || ""
+      ).toLowerCase();
+      const isReqText =
+        reqContentType.includes("json") ||
+        reqContentType.includes("text") ||
+        reqContentType.includes("xml") ||
+        reqContentType.includes("form") ||
+        reqContentType.includes("javascript");
 
-      req.on("end", () => {
-        const reqBuffer = Buffer.concat(reqChunks);
-        const reqContentType = (
-          req.headers["content-type"] || ""
-        ).toLowerCase();
-        const isReqText =
-          reqContentType.includes("json") ||
-          reqContentType.includes("text") ||
-          reqContentType.includes("xml") ||
-          reqContentType.includes("form") ||
-          reqContentType.includes("javascript");
-        const reqBody = isReqText
-          ? reqBuffer.toString("utf8")
-          : `[Binary Data: ${reqBuffer.length} bytes]`;
+      // Only capture small request bodies (< 50KB)
+      const reqCl = parseInt(req.headers["content-length"] || "0", 10);
+      const captureReqBody = isReqText && reqCl > 0 && reqCl < 50_000;
 
-        const proxyReq = http.request(
-          {
-            host: "127.0.0.1",
-            port: targetPort,
-            path: req.url,
-            method: req.method,
-            headers: req.headers,
-          },
-          (proxyRes) => {
-            const resChunks: Buffer[] = [];
+      if (captureReqBody) {
+        const reqChunks: Buffer[] = [];
+        req.on("data", (chunk: Buffer) => {
+          if (reqChunks.length < 200) {
+            // limit ~100KB
+            reqChunks.push(chunk);
+          }
+        });
+        req.on("end", () => {
+          const reqBuffer = Buffer.concat(reqChunks);
+          reqBodySize = reqBuffer.length;
+          reqBodyText = isReqText
+            ? reqBuffer.toString("utf8", 0, 2000) // cap for IPC
+            : `[Binary Data: ${reqBuffer.length} bytes]`;
+          if (reqBodyText.length > MAX_IPC_BODY) {
+            reqBodyText = reqBodyText.substring(0, MAX_IPC_BODY) + "... (truncated)";
+          }
+          reqBodyCaptured = true;
+        });
+      }
 
-            res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
+      // --- Proxy request to target ---
+      const proxyReq = http.request(
+        {
+          host: "127.0.0.1",
+          port: targetPort,
+          path: req.url,
+          method: req.method,
+          headers: req.headers,
+        },
+        (proxyRes) => {
+          // Send status to client immediately
+          res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
 
-            proxyRes.on("data", (chunk) => {
-              resChunks.push(chunk);
-              res.write(chunk);
-            });
+          // --- Stream response to client (NO buffering) ---
+          let resBodyText = "";
+          let resBodySize = 0;
+          let resBodyTruncated = false;
+          const resContentType = (
+            proxyRes.headers["content-type"] || ""
+          ).toLowerCase();
+          const isResText =
+            resContentType.includes("json") ||
+            resContentType.includes("text") ||
+            resContentType.includes("xml") ||
+            resContentType.includes("form") ||
+            resContentType.includes("javascript");
 
-            proxyRes.on("end", () => {
-              res.end();
-              const latency = Date.now() - startTime;
-              const resBuffer = Buffer.concat(resChunks);
-              const resContentType = (
-                proxyRes.headers["content-type"] || ""
-              ).toLowerCase();
-              const isResText =
-                resContentType.includes("json") ||
-                resContentType.includes("text") ||
-                resContentType.includes("xml") ||
-                resContentType.includes("form") ||
-                resContentType.includes("javascript");
-              const resBody = isResText
-                ? resBuffer.toString("utf8")
-                : `[Binary Data: ${resBuffer.length} bytes]`;
+          // Only capture if small enough (< 100KB) and text-like
+          const resCl = parseInt(proxyRes.headers["content-length"] || "0", 10);
+          const captureResBody = isResText && resCl > 0 && resCl < 100_000;
 
-              this.sendTrafficLog({
+          proxyRes.on("data", (chunk: Buffer) => {
+            // Write to client immediately (stream)
+            res.write(chunk);
+
+            // Optionally capture small body sample for inspector
+            if (captureResBody && !resBodyTruncated) {
+              if (resBodySize + chunk.length <= MAX_BODY_CAPTURE) {
+                resBodyText += chunk.toString("utf8");
+                resBodySize += chunk.length;
+              } else {
+                resBodyText += chunk.toString("utf8", 0, MAX_BODY_CAPTURE - resBodySize);
+                resBodyText += "... (truncated)";
+                resBodyTruncated = true;
+              }
+            }
+          });
+
+          proxyRes.on("end", () => {
+            res.end();
+            const latency = Date.now() - startTime;
+
+            // Wait briefly for req body capture if needed, then send log
+            const sendLog = () => {
+              const log: TrafficRequestLog = {
                 id: reqId,
                 tunnelId,
                 timestamp: startTime,
                 method: req.method || "GET",
                 path: req.url || "/",
                 reqHeaders: req.headers,
-                reqBody,
+                reqBody:
+                  reqBodyCaptured
+                    ? reqBodyText
+                    : captureReqBody
+                      ? "..."
+                      : `[Binary Data${reqBodySize ? `: ${reqBodySize} bytes` : ""}]`,
                 statusCode: proxyRes.statusCode,
                 resHeaders: proxyRes.headers,
-                resBody:
-                  resBody.length > 5000
-                    ? resBody.substring(0, 5000) + "... (truncated)"
-                    : resBody,
+                resBody: captureResBody
+                  ? resBodyText
+                  : `[Binary Data${resBodySize ? `: body streamed` : ""}]`,
                 latency,
-              });
-            });
-          },
+              };
+              this.sendTrafficLog(log);
+            };
+
+            if (captureReqBody && !reqBodyCaptured) {
+              setTimeout(sendLog, 30);
+            } else {
+              sendLog();
+            }
+          });
+        },
+      );
+
+      proxyReq.on("error", (err) => {
+        res.writeHead(502, { "Content-Type": "text/plain" });
+        res.end(
+          `Bad Gateway: Failed to forward request to local port ${targetPort}. Error: ${err.message}`,
         );
 
-        proxyReq.on("error", (err) => {
-          res.writeHead(502, { "Content-Type": "text/plain" });
-          res.end(
-            `Bad Gateway: Failed to forward request to local port ${targetPort}. Error: ${err.message}`,
-          );
-
-          const latency = Date.now() - startTime;
-          this.sendTrafficLog({
-            id: reqId,
-            tunnelId,
-            timestamp: startTime,
-            method: req.method || "GET",
-            path: req.url || "/",
-            reqHeaders: req.headers,
-            reqBody,
-            statusCode: 502,
-            resBody: `Error forwarding to port ${targetPort}: ${err.message}`,
-            latency,
-          });
+        const latency = Date.now() - startTime;
+        this.sendTrafficLog({
+          id: reqId,
+          tunnelId,
+          timestamp: startTime,
+          method: req.method || "GET",
+          path: req.url || "/",
+          reqHeaders: req.headers,
+          reqBody: reqBodyCaptured ? reqBodyText : "",
+          statusCode: 502,
+          resBody: `Error forwarding to port ${targetPort}: ${err.message}`,
+          latency,
         });
+      });
 
-        proxyReq.write(reqBuffer);
+      // Pipe incoming request body to proxy request
+      req.on("data", (chunk: Buffer) => {
+        proxyReq.write(chunk);
+      });
+      req.on("end", () => {
         proxyReq.end();
+      });
+      req.on("error", (err) => {
+        proxyReq.destroy();
       });
     });
 

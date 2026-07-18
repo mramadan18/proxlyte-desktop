@@ -15,6 +15,11 @@ export interface TunnelLog {
   details?: LogDetail;
 }
 
+/**
+ * Maximum number of logs to keep in memory to prevent unbounded growth.
+ */
+const MAX_LOGS = 500;
+
 interface LogsState {
   logs: TunnelLog[];
   addLog: (log: TunnelLog) => void;
@@ -25,8 +30,19 @@ interface LogsState {
 
 export const useLogsStore = create<LogsState>((set) => ({
   logs: [],
-  addLog: (log) => set((state) => ({ logs: [...state.logs, log] })),
+
+  addLog: (log) =>
+    set((state) => {
+      const next = [...state.logs, log];
+      // Keep only the last MAX_LOGS entries and hard-cap at MAX_LOGS + 50
+      if (next.length > MAX_LOGS) {
+        return { logs: next.slice(next.length - MAX_LOGS) };
+      }
+      return { logs: next };
+    }),
+
   clearLogs: () => set({ logs: [] }),
+
   getCurrentTimestamp: () => {
     return new Date().toLocaleTimeString("en-US", {
       hour12: false,
@@ -35,11 +51,12 @@ export const useLogsStore = create<LogsState>((set) => ({
       second: "2-digit",
     });
   },
+
   setupListeners: () => {
     if (typeof window !== "undefined" && window.api) {
       window.api.onTunnelLog((tunnelId: string, log: string) => {
-        set((state) => ({
-          logs: [
+        set((state) => {
+          const next = [
             ...state.logs,
             {
               time: state.getCurrentTimestamp(),
@@ -47,8 +64,12 @@ export const useLogsStore = create<LogsState>((set) => ({
               message: log,
               tunnelId,
             },
-          ],
-        }));
+          ];
+          if (next.length > MAX_LOGS) {
+            return { logs: next.slice(next.length - MAX_LOGS) };
+          }
+          return { logs: next };
+        });
       });
     }
   },

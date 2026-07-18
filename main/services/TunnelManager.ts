@@ -16,6 +16,15 @@ export class TunnelManager {
   private autoReconnect: boolean = true;
   public onStateChange?: () => void;
 
+  // ── Debounce / Rate-limiting for notifications ──────────────────────────────
+  private lastNotifyUrlAt = new Map<string, number>();
+  private lastNotifyErrorAt = new Map<string, number>();
+  private readonly NOTIFY_COOLDOWN_MS = 3000;
+
+  // ── Reconnect loop guard ────────────────────────────────────────────────────
+  private reconnectAttempts = new Map<string, number>();
+  private readonly MAX_RECONNECT_ATTEMPTS = 5;
+
   constructor() {
     // No single service creation in constructor anymore.
   }
@@ -49,46 +58,94 @@ export class TunnelManager {
     });
   }
 
+  private canNotifyUrl(tunnelId: string): boolean {
+    const last = this.lastNotifyUrlAt.get(tunnelId) || 0;
+    const now = Date.now();
+    if (now - last < this.NOTIFY_COOLDOWN_MS) return false;
+    this.lastNotifyUrlAt.set(tunnelId, now);
+    return true;
+  }
+
+  private canNotifyError(tunnelId: string): boolean {
+    const last = this.lastNotifyErrorAt.get(tunnelId) || 0;
+    const now = Date.now();
+    if (now - last < this.NOTIFY_COOLDOWN_MS) return false;
+    this.lastNotifyErrorAt.set(tunnelId, now);
+    return true;
+  }
+
   private setupInternalListeners(
     tunnelId: string,
     service: CloudflaredService,
   ) {
-    // Global notifications
+    // ── URL received ─────────────────────────────────────────────────
     service.on("url", (url) => {
       const last = this.lastTunnels.get(tunnelId);
       if (last) {
         last.domain = url;
       }
-      new Notification({
-        title: "Tunnel Active",
-        body: `Your project is now live at ${url}`,
-        silent: false,
-      }).show();
+
+      if (this.canNotifyUrl(tunnelId)) {
+        try {
+          new Notification({
+            title: "Tunnel Active",
+            body: `Your project is now live at ${url}`,
+            silent: false,
+          }).show();
+        } catch (e) {
+          // notifications disabled or OS-level failure — silently ignore
+        }
+      }
 
       this.broadcast("tunnel-url", tunnelId, url);
       this.onStateChange?.();
     });
 
+    // ── Error received ───────────────────────────────────────────────
     service.on("error", (error) => {
-      new Notification({
-        title: "Tunnel Error",
-        body: `Failed to establish connection: ${error}`,
-      }).show();
-
+      if (this.canNotifyError(tunnelId)) {
+        try {
+          new Notification({
+            title: "Tunnel Error",
+            body: `Failed to establish connection: ${error}`,
+          }).show();
+        } catch (e) {
+          // silently ignore
+        }
+      }
+      this.reconnectAttempts.delete(tunnelId);
       this.broadcast("tunnel-error", tunnelId, error);
       this.onStateChange?.();
     });
 
+    // ── Log stdout/stderr ────────────────────────────────────────────
     service.on("log", (log) => {
       this.broadcast("tunnel-log", tunnelId, log);
     });
 
+    // ── Process closed ───────────────────────────────────────────────
     service.on("close", (code) => {
       if (code !== 0 && code !== null && this.autoReconnect) {
-        console.log(
-          `Tunnel ${tunnelId} closed unexpectedly. Attempting to reconnect...`,
-        );
-        this.attemptReconnect(tunnelId);
+        const attempts = this.reconnectAttempts.get(tunnelId) || 0;
+        if (attempts < this.MAX_RECONNECT_ATTEMPTS) {
+          console.log(
+            `Tunnel ${tunnelId} closed unexpectedly (attempt ${attempts + 1}/${this.MAX_RECONNECT_ATTEMPTS}). Reconnecting...`,
+          );
+          this.reconnectAttempts.set(tunnelId, attempts + 1);
+          this.attemptReconnect(tunnelId);
+        } else {
+          console.warn(
+            `Tunnel ${tunnelId} max reconnect attempts (${this.MAX_RECONNECT_ATTEMPTS}) reached. Giving up.`,
+          );
+          this.broadcast(
+            "tunnel-error",
+            tunnelId,
+            "Maximum reconnect attempts reached. Tunnel stopped.",
+          );
+          this.reconnectAttempts.delete(tunnelId);
+        }
+      } else {
+        this.reconnectAttempts.delete(tunnelId);
       }
       this.onStateChange?.();
     });
@@ -193,6 +250,8 @@ export class TunnelManager {
     ipcMain.handle(
       "start-quick-tunnel",
       async (_event, tunnelId: string, port: number) => {
+        // Reset reconnect counter on fresh start
+        this.reconnectAttempts.set(tunnelId, 0);
         this.lastTunnels.set(tunnelId, { domain: null, port });
 
         const proxyPort = await this.proxyManager.startProxy(tunnelId, port);
@@ -219,6 +278,8 @@ export class TunnelManager {
         tunnelId: string,
         params: { domain: string; port: number },
       ) => {
+        // Reset reconnect counter on fresh start
+        this.reconnectAttempts.set(tunnelId, 0);
         this.lastTunnels.set(tunnelId, {
           domain: params.domain,
           port: params.port,
@@ -279,6 +340,7 @@ export class TunnelManager {
    * Used by TrayManager for individual tunnel control from the tray menu.
    */
   public stopTunnel(tunnelId: string) {
+    this.reconnectAttempts.delete(tunnelId);
     this.proxyManager.stopProxy(tunnelId);
     this.lastTunnels.delete(tunnelId);
     this.activeMetrics.delete(tunnelId);
@@ -313,5 +375,8 @@ export class TunnelManager {
     });
     this.services.clear();
     this.lastTunnels.clear();
+    this.reconnectAttempts.clear();
+    this.lastNotifyUrlAt.clear();
+    this.lastNotifyErrorAt.clear();
   }
 }
